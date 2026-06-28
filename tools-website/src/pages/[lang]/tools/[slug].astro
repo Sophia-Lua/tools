@@ -17,6 +17,9 @@ import JwtDecoder from '../../../islands/jwt_decoder'
 import ColorConverter from '../../../islands/color_converter'
 import CssUnitConverter from '../../../islands/css_unit_converter'
 import PasswordGenerator from '../../../islands/password_generator'
+import CronParser from '../../../islands/cron_parser'
+import JsonToTs from '../../../islands/json_to_ts'
+import SvgViewer from '../../../islands/svg_viewer'
 import QrGenerator from '../../../islands/qr_generator'
 import DateTimeTool from '../../../islands/datetime_tool'
 import TextStats from '../../../islands/text_stats'
@@ -71,6 +74,9 @@ const slug = tool.slug
       {slug === 'color-converter' && <ColorConverter client:load />}
       {slug === 'css-unit-converter' && <CssUnitConverter client:load />}
       {slug === 'password-generator' && <PasswordGenerator client:load />}
+      {slug === 'cron-parser' && <CronParser client:load />}
+      {slug === 'json-to-ts' && <JsonToTs client:load />}
+      {slug === 'svg-viewer' && <SvgViewer client:load />}
       {slug === 'qr-generator' && <QrGenerator client:load />}
       {slug === 'datetime-tool' && <DateTimeTool client:load />}
       {slug === 'text-stats' && <TextStats client:load />}

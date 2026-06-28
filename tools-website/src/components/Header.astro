@@ -44,10 +44,11 @@ const { lang = 'zh' } = Astro.props
 
   document.getElementById('lang-toggle')?.addEventListener('click', () => {
     const path = window.location.pathname
-    if (lang === 'zh') {
-      window.location.pathname = path.replace('/zh', '/en') || '/en'
+    const targetLang = lang === 'zh' ? 'en' : 'zh'
+    if (path.startsWith('/zh') || path.startsWith('/en')) {
+      window.location.pathname = path.replace(/^\/(zh|en)/, '/' + targetLang)
     } else {
-      window.location.pathname = path.replace('/en', '/zh') || '/zh'
+      window.location.pathname = '/' + targetLang
     }
   })
 </script>
