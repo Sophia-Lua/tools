@@ -27,6 +27,7 @@ import ImageCompressor from '../../../islands/image_compressor'
 import ImageConverter from '../../../islands/image_converter'
 import ImageCropper from '../../../islands/image_cropper'
 import ImageMetadata from '../../../islands/image_metadata'
+import ImageSlicer from '../../../islands/image_slicer'
 import PdfMerger from '../../../islands/pdf_merger'
 import PdfSplitter from '../../../islands/pdf_splitter'
 import DocxConverter from '../../../islands/docx_converter'
@@ -80,6 +81,7 @@ const slug = tool.slug
       {slug === 'image-converter' && <ImageConverter client:load />}
       {slug === 'image-cropper' && <ImageCropper client:load />}
       {slug === 'image-metadata' && <ImageMetadata client:load />}
+      {slug === 'image-slicer' && <ImageSlicer client:load />}
       {slug === 'pdf-merger' && <PdfMerger client:load />}
       {slug === 'pdf-splitter' && <PdfSplitter client:load />}
       {slug === 'docx-converter' && <DocxConverter client:load />}

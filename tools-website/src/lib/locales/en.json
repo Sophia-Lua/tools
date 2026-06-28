@@ -38,6 +38,7 @@
     "image-converter": { "name": "Image Converter", "desc": "Convert image formats" },
     "image-cropper": { "name": "Image Cropper", "desc": "Crop and resize images" },
     "image-metadata": { "name": "Image Metadata", "desc": "View and strip image metadata" },
+    "image-slicer": { "name": "Image Multi-Region Slicer", "desc": "Select multiple regions and export as separate images with custom sizes and JSON coordinates" },
     "hash-generator": { "name": "Hash Generator", "desc": "Generate MD5, SHA-1, SHA-256 hashes" },
     "jwt-decoder": { "name": "JWT Decoder", "desc": "Decode and verify JWT tokens" },
     "color-converter": { "name": "Color Converter", "desc": "Convert between HEX, RGB, HSL colors" },

@@ -29,6 +29,7 @@ export const tools: ToolDef[] = [
   { slug: 'image-converter', titleKey: 'tools.image-converter.name', descKey: 'tools.image-converter.desc', category: 'image', icon: 'RefreshCw', keywords: ['image', 'convert', 'format'] },
   { slug: 'image-cropper', titleKey: 'tools.image-cropper.name', descKey: 'tools.image-cropper.desc', category: 'image', icon: 'Crop', keywords: ['image', 'crop', 'resize'] },
   { slug: 'image-metadata', titleKey: 'tools.image-metadata.name', descKey: 'tools.image-metadata.desc', category: 'image', icon: 'Info', keywords: ['image', 'metadata', 'exif'] },
+  { slug: 'image-slicer', titleKey: 'tools.image-slicer.name', descKey: 'tools.image-slicer.desc', category: 'image', icon: 'Scissors', keywords: ['image', 'slice', 'crop', 'multi'] },
   { slug: 'hash-generator', titleKey: 'tools.hash-generator.name', descKey: 'tools.hash-generator.desc', category: 'dev', icon: 'Hash', keywords: ['hash', 'md5', 'sha'] },
   { slug: 'jwt-decoder', titleKey: 'tools.jwt-decoder.name', descKey: 'tools.jwt-decoder.desc', category: 'dev', icon: 'Key', keywords: ['jwt', 'token', 'decode'] },
   { slug: 'color-converter', titleKey: 'tools.color-converter.name', descKey: 'tools.color-converter.desc', category: 'dev', icon: 'Palette', keywords: ['color', 'hex', 'rgb', 'hsl'] },

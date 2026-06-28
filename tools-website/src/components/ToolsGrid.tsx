@@ -20,6 +20,7 @@ const tools = [
   { slug: 'image-converter', titleZh: '图片格式转换', titleEn: 'Image Converter', descZh: '转换图片格式', descEn: 'Convert image formats', category: 'image', icon: 'RefreshCw' },
   { slug: 'image-cropper', titleZh: '图片裁剪', titleEn: 'Image Cropper', descZh: '裁剪和调整图片尺寸', descEn: 'Crop and resize images', category: 'image', icon: 'Crop' },
   { slug: 'image-metadata', titleZh: '图片元数据', titleEn: 'Image Metadata', descZh: '查看和剥离图片元数据', descEn: 'View and strip image metadata', category: 'image', icon: 'Info' },
+  { slug: 'image-slicer', titleZh: '多区域切图', titleEn: 'Multi-Region Slicer', descZh: '框选多个区域导出为独立图片', descEn: 'Select multiple regions and export as separate images', category: 'image', icon: 'Scissors' },
   { slug: 'hash-generator', titleZh: '哈希生成器', titleEn: 'Hash Generator', descZh: '生成MD5、SHA-1、SHA-256等哈希值', descEn: 'Generate MD5, SHA-1, SHA-256 hashes', category: 'dev', icon: 'Hash' },
   { slug: 'jwt-decoder', titleZh: 'JWT解码器', titleEn: 'JWT Decoder', descZh: '解码和验证JWT令牌', descEn: 'Decode and verify JWT tokens', category: 'dev', icon: 'Key' },
   { slug: 'color-converter', titleZh: '颜色转换', titleEn: 'Color Converter', descZh: '在HEX、RGB、HSL之间转换颜色', descEn: 'Convert between HEX, RGB, HSL colors', category: 'dev', icon: 'Palette' },
