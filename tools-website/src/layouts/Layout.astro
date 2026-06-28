@@ -1,0 +1,42 @@
+---
+import '../styles/global.css'
+
+interface Props {
+  title: string
+  lang?: string
+}
+
+const { title, lang = 'zh' } = Astro.props
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <script is:inline>
+      const theme = (() => {
+        if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+          return localStorage.getItem('theme')
+        }
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          return 'dark'
+        }
+        return 'light'
+      })()
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    </script>
+  </head>
+  <body class="flex min-h-screen flex-col bg-[var(--color-bg)] text-[var(--color-text)]">
+    <div class="flex flex-1 flex-col">
+      <slot />
+    </div>
+  </body>
+</html>

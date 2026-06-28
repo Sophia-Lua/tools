@@ -1,0 +1,25 @@
+---
+import Layout from '../../../layouts/Layout.astro'
+import Header from '../../../components/Header.astro'
+import Footer from '../../../components/Footer.astro'
+import ToolsGrid from '../../../components/ToolsGrid'
+import { t, locales } from '../../../lib/i18n'
+
+export function getStaticPaths() {
+  return locales.map(lang => ({ params: { lang } }))
+}
+
+const { lang } = Astro.params
+---
+
+<Layout title={`${t(lang, 'nav.tools')} - ToolBox`} lang={lang}>
+  <Header lang={lang} />
+  <main class="mx-auto w-full max-w-7xl px-4 py-8">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-[var(--color-text)]">{t(lang, 'nav.tools')}</h1>
+      <p class="mt-2 text-sm text-[var(--color-text-secondary)]">{t(lang, 'home.subtitle')}</p>
+    </div>
+    <ToolsGrid lang={lang} client:load />
+  </main>
+  <Footer />
+</Layout>

@@ -1,0 +1,92 @@
+---
+import Layout from '../../../layouts/Layout.astro'
+import Header from '../../../components/Header.astro'
+import Footer from '../../../components/Footer.astro'
+import ToolPage from '../../../layouts/ToolPage.astro'
+import { getToolBySlug, tools } from '../../../lib/registry'
+import { t, locales } from '../../../lib/i18n'
+import JsonFormatter from '../../../islands/json_formatter'
+import Base64Codec from '../../../islands/base64_codec'
+import UrlCodec from '../../../islands/url_codec'
+import MarkdownPreview from '../../../islands/markdown_preview'
+import RegexTester from '../../../islands/regex_tester'
+import YamlFormatter from '../../../islands/yaml_formatter'
+import TextDiff from '../../../islands/text_diff'
+import HashGenerator from '../../../islands/hash_generator'
+import JwtDecoder from '../../../islands/jwt_decoder'
+import ColorConverter from '../../../islands/color_converter'
+import CssUnitConverter from '../../../islands/css_unit_converter'
+import PasswordGenerator from '../../../islands/password_generator'
+import QrGenerator from '../../../islands/qr_generator'
+import DateTimeTool from '../../../islands/datetime_tool'
+import TextStats from '../../../islands/text_stats'
+import NumberConverter from '../../../islands/number_converter'
+import UuidGenerator from '../../../islands/uuid_generator'
+import LoremGenerator from '../../../islands/lorem_generator'
+import ImageCompressor from '../../../islands/image_compressor'
+import ImageConverter from '../../../islands/image_converter'
+import ImageCropper from '../../../islands/image_cropper'
+import ImageMetadata from '../../../islands/image_metadata'
+import PdfMerger from '../../../islands/pdf_merger'
+import PdfSplitter from '../../../islands/pdf_splitter'
+import DocxConverter from '../../../islands/docx_converter'
+import XlsxConverter from '../../../islands/xlsx_converter'
+import CsvViewer from '../../../islands/csv_viewer'
+import ZipViewer from '../../../islands/zip_viewer'
+
+export function getStaticPaths() {
+  const paths = []
+  for (const lang of locales) {
+    for (const tool of tools) {
+      paths.push({
+        params: { lang, slug: tool.slug },
+        props: { tool },
+      })
+    }
+  }
+  return paths
+}
+
+const { lang } = Astro.params
+const { tool } = Astro.props
+const toolName = t(lang, tool.titleKey)
+const toolDesc = t(lang, tool.descKey)
+const slug = tool.slug
+---
+
+<Layout title={`${toolName} - ToolBox`} lang={lang}>
+  <Header lang={lang} />
+  <main>
+    <ToolPage title={toolName} description={toolDesc}>
+      {slug === 'json-formatter' && <JsonFormatter client:load />}
+      {slug === 'base64-codec' && <Base64Codec client:load />}
+      {slug === 'url-codec' && <UrlCodec client:load />}
+      {slug === 'markdown-preview' && <MarkdownPreview client:load />}
+      {slug === 'regex-tester' && <RegexTester client:load />}
+      {slug === 'yaml-formatter' && <YamlFormatter client:load />}
+      {slug === 'text-diff' && <TextDiff client:load />}
+      {slug === 'hash-generator' && <HashGenerator client:load />}
+      {slug === 'jwt-decoder' && <JwtDecoder client:load />}
+      {slug === 'color-converter' && <ColorConverter client:load />}
+      {slug === 'css-unit-converter' && <CssUnitConverter client:load />}
+      {slug === 'password-generator' && <PasswordGenerator client:load />}
+      {slug === 'qr-generator' && <QrGenerator client:load />}
+      {slug === 'datetime-tool' && <DateTimeTool client:load />}
+      {slug === 'text-stats' && <TextStats client:load />}
+      {slug === 'number-converter' && <NumberConverter client:load />}
+      {slug === 'uuid-generator' && <UuidGenerator client:load />}
+      {slug === 'lorem-generator' && <LoremGenerator client:load />}
+      {slug === 'image-compressor' && <ImageCompressor client:load />}
+      {slug === 'image-converter' && <ImageConverter client:load />}
+      {slug === 'image-cropper' && <ImageCropper client:load />}
+      {slug === 'image-metadata' && <ImageMetadata client:load />}
+      {slug === 'pdf-merger' && <PdfMerger client:load />}
+      {slug === 'pdf-splitter' && <PdfSplitter client:load />}
+      {slug === 'docx-converter' && <DocxConverter client:load />}
+      {slug === 'xlsx-converter' && <XlsxConverter client:load />}
+      {slug === 'csv-viewer' && <CsvViewer client:load />}
+      {slug === 'zip-viewer' && <ZipViewer client:load />}
+    </ToolPage>
+  </main>
+  <Footer />
+</Layout>
