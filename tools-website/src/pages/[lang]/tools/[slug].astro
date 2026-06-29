@@ -25,6 +25,18 @@ import HtmlEntity from '../../../islands/html_entity'
 import ImageToBase64 from '../../../islands/image_to_base64'
 import CssGradient from '../../../islands/css_gradient'
 import ContrastChecker from '../../../islands/contrast_checker'
+import ApiTester from '../../../islands/api_tester'
+import SqlFormatter from '../../../islands/sql_formatter'
+import YamlJson from '../../../islands/yaml_json'
+import CssGrid from '../../../islands/css_grid'
+import BoxShadow from '../../../islands/box_shadow'
+import CssAnimation from '../../../islands/css_animation'
+import UnicodeConverter from '../../../islands/unicode_converter'
+import MorseCode from '../../../islands/morse_code'
+import UrlParser from '../../../islands/url_parser'
+import JsonSchema from '../../../islands/json_schema'
+import RegexVisual from '../../../islands/regex_visual'
+import FontCompare from '../../../islands/font_compare'
 import QrGenerator from '../../../islands/qr_generator'
 import DateTimeTool from '../../../islands/datetime_tool'
 import TextStats from '../../../islands/text_stats'
@@ -87,6 +99,18 @@ const slug = tool.slug
       {slug === 'image-to-base64' && <ImageToBase64 client:load />}
       {slug === 'css-gradient' && <CssGradient client:load />}
       {slug === 'contrast-checker' && <ContrastChecker client:load />}
+      {slug === 'api-tester' && <ApiTester client:load />}
+      {slug === 'sql-formatter' && <SqlFormatter client:load />}
+      {slug === 'yaml-json' && <YamlJson client:load />}
+      {slug === 'css-grid' && <CssGrid client:load />}
+      {slug === 'box-shadow' && <BoxShadow client:load />}
+      {slug === 'css-animation' && <CssAnimation client:load />}
+      {slug === 'unicode-converter' && <UnicodeConverter client:load />}
+      {slug === 'morse-code' && <MorseCode client:load />}
+      {slug === 'url-parser' && <UrlParser client:load />}
+      {slug === 'json-schema' && <JsonSchema client:load />}
+      {slug === 'regex-visual' && <RegexVisual client:load />}
+      {slug === 'font-compare' && <FontCompare client:load />}
       {slug === 'qr-generator' && <QrGenerator client:load />}
       {slug === 'datetime-tool' && <DateTimeTool client:load />}
       {slug === 'text-stats' && <TextStats client:load />}
