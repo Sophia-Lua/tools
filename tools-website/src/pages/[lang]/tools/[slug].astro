@@ -20,6 +20,11 @@ import PasswordGenerator from '../../../islands/password_generator'
 import CronParser from '../../../islands/cron_parser'
 import JsonToTs from '../../../islands/json_to_ts'
 import SvgViewer from '../../../islands/svg_viewer'
+import TextCase from '../../../islands/text_case'
+import HtmlEntity from '../../../islands/html_entity'
+import ImageToBase64 from '../../../islands/image_to_base64'
+import CssGradient from '../../../islands/css_gradient'
+import ContrastChecker from '../../../islands/contrast_checker'
 import QrGenerator from '../../../islands/qr_generator'
 import DateTimeTool from '../../../islands/datetime_tool'
 import TextStats from '../../../islands/text_stats'
@@ -77,6 +82,11 @@ const slug = tool.slug
       {slug === 'cron-parser' && <CronParser client:load />}
       {slug === 'json-to-ts' && <JsonToTs client:load />}
       {slug === 'svg-viewer' && <SvgViewer client:load />}
+      {slug === 'text-case' && <TextCase client:load />}
+      {slug === 'html-entity' && <HtmlEntity client:load />}
+      {slug === 'image-to-base64' && <ImageToBase64 client:load />}
+      {slug === 'css-gradient' && <CssGradient client:load />}
+      {slug === 'contrast-checker' && <ContrastChecker client:load />}
       {slug === 'qr-generator' && <QrGenerator client:load />}
       {slug === 'datetime-tool' && <DateTimeTool client:load />}
       {slug === 'text-stats' && <TextStats client:load />}
