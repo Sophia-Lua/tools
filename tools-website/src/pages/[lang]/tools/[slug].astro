@@ -37,6 +37,30 @@ import UrlParser from '../../../islands/url_parser'
 import JsonSchema from '../../../islands/json_schema'
 import RegexVisual from '../../../islands/regex_visual'
 import FontCompare from '../../../islands/font_compare'
+import Base32Codec from '../../../islands/base32_codec'
+import JwtGenerator from '../../../islands/jwt_generator'
+import HtmlToJsx from '../../../islands/html_to_jsx'
+import CssToTailwind from '../../../islands/css_to_tailwind'
+import CsvToJson from '../../../islands/csv_to_json'
+import JsonToCsv from '../../../islands/json_to_csv'
+import XmlFormatter from '../../../islands/xml_formatter'
+import ProtobufViewer from '../../../islands/protobuf_viewer'
+import PasswordStrength from '../../../islands/password_strength'
+import DockerCompose from '../../../islands/docker_compose'
+import NginxConfig from '../../../islands/nginx_config'
+import GitCommit from '../../../islands/git_commit'
+import JsonPrettier from '../../../islands/json_prettier'
+import IpLookup from '../../../islands/ip_lookup'
+import ClipboardHistory from '../../../islands/clipboard_history'
+import Base64ToImage from '../../../islands/base64_to_image'
+import JsonToEnv from '../../../islands/json_to_env'
+import CodeMinifier from '../../../islands/code_minifier'
+import ColorPalette from '../../../islands/color_palette'
+import EmojiPicker from '../../../islands/emoji_picker'
+import MarkdownToHtml from '../../../islands/markdown_to_html'
+import PlaceholderImage from '../../../islands/placeholder_image'
+import MarkdownTable from '../../../islands/markdown_table'
+import QrReader from '../../../islands/qr_reader'
 import QrGenerator from '../../../islands/qr_generator'
 import DateTimeTool from '../../../islands/datetime_tool'
 import TextStats from '../../../islands/text_stats'
@@ -111,6 +135,30 @@ const slug = tool.slug
       {slug === 'json-schema' && <JsonSchema client:load />}
       {slug === 'regex-visual' && <RegexVisual client:load />}
       {slug === 'font-compare' && <FontCompare client:load />}
+      {slug === 'base32-codec' && <Base32Codec client:load />}
+      {slug === 'jwt-generator' && <JwtGenerator client:load />}
+      {slug === 'html-to-jsx' && <HtmlToJsx client:load />}
+      {slug === 'css-to-tailwind' && <CssToTailwind client:load />}
+      {slug === 'csv-to-json' && <CsvToJson client:load />}
+      {slug === 'json-to-csv' && <JsonToCsv client:load />}
+      {slug === 'xml-formatter' && <XmlFormatter client:load />}
+      {slug === 'protobuf-viewer' && <ProtobufViewer client:load />}
+      {slug === 'password-strength' && <PasswordStrength client:load />}
+      {slug === 'docker-compose' && <DockerCompose client:load />}
+      {slug === 'nginx-config' && <NginxConfig client:load />}
+      {slug === 'git-commit' && <GitCommit client:load />}
+      {slug === 'json-prettier-enhanced' && <JsonPrettier client:load />}
+      {slug === 'ip-lookup' && <IpLookup client:load />}
+      {slug === 'clipboard-history' && <ClipboardHistory client:load />}
+      {slug === 'base64-to-image' && <Base64ToImage client:load />}
+      {slug === 'json-to-env' && <JsonToEnv client:load />}
+      {slug === 'code-minifier' && <CodeMinifier client:load />}
+      {slug === 'color-palette' && <ColorPalette client:load />}
+      {slug === 'emoji-picker' && <EmojiPicker client:load />}
+      {slug === 'markdown-to-html' && <MarkdownToHtml client:load />}
+      {slug === 'placeholder-image' && <PlaceholderImage client:load />}
+      {slug === 'markdown-table' && <MarkdownTable client:load />}
+      {slug === 'qr-reader' && <QrReader client:load />}
       {slug === 'qr-generator' && <QrGenerator client:load />}
       {slug === 'datetime-tool' && <DateTimeTool client:load />}
       {slug === 'text-stats' && <TextStats client:load />}
