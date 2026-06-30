@@ -1,41 +1,22 @@
-import StorageUtils from './storage.js';
-
 const ApiUtils = {
   async callOpenRouter(prompt) {
-    const apiKey = await StorageUtils.getApiKey();
-    if (!apiKey) {
-      throw new Error('API密钥未设置');
-    }
-
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'AI Form Auto-Fill'
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-flash-1.5',
-        messages: [
-          {
-            role: 'system',
-            content: '你是一个表单填写助手。根据提供的表单字段信息和用户数据，为每个字段生成填充建议。返回JSON格式的建议列表。'
-          },
-          {
-            role: 'user',
-            content: prompt
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { type: 'callOpenRouter', prompt },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
           }
-        ]
-      })
+
+          if (response.success) {
+            resolve(response.data);
+          } else {
+            reject(new Error(response.error));
+          }
+        }
+      );
     });
-
-    if (!response.ok) {
-      throw new Error(`API调用失败: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
   }
 };
 
