@@ -24,6 +24,10 @@ describe('StorageUtils', () => {
           set: jest.fn((items) => {
             Object.assign(store, items);
             return Promise.resolve();
+          }),
+          clear: jest.fn(() => {
+            Object.keys(store).forEach(key => delete store[key]);
+            return Promise.resolve();
           })
         }
       }
@@ -40,5 +44,14 @@ describe('StorageUtils', () => {
     await StorageUtils.saveProfile(profile);
     const profiles = await StorageUtils.getProfiles();
     expect(profiles).toContainEqual(profile);
+  });
+
+  it('should clear all data from storage', async () => {
+    await StorageUtils.saveProfile({ name: 'Test', data: { name: 'John' } });
+    await StorageUtils.saveApiKey('test-key');
+    await StorageUtils.deleteAll();
+    expect(chrome.storage.local.clear).toHaveBeenCalled();
+    const profiles = await StorageUtils.getProfiles();
+    expect(profiles).toEqual([]);
   });
 });

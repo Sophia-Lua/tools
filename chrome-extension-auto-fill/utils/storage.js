@@ -28,6 +28,10 @@ const StorageUtils = {
 
   async saveApiKey(apiKey) {
     await chrome.storage.local.set({ apiKey });
+  },
+
+  async deleteAll() {
+    await chrome.storage.local.clear();
   }
 };
 
