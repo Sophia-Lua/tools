@@ -6,7 +6,8 @@
     "test": "jest"
   },
   "jest": {
-    "testEnvironment": "jsdom"
+    "testEnvironment": "jsdom",
+    "setupFiles": ["<rootDir>/tests/setup.js"]
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
