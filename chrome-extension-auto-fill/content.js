@@ -5,10 +5,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const forms = FormDetector.detectForms();
     sendResponse({ forms });
   }
-  
+
   if (request.action === 'fillForm') {
     const { fieldName, value } = request;
-    const field = document.querySelector(`[name="${fieldName}"]`);
+    const field = document.querySelector(`[name="${CSS.escape(fieldName)}"]`);
     if (field) {
       field.value = value;
       field.dispatchEvent(new Event('input', { bubbles: true }));
@@ -21,7 +21,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.action === 'previewFill') {
     const { fieldName, value } = request;
-    const field = document.querySelector(`[name="${fieldName}"]`);
+    const field = document.querySelector(`[name="${CSS.escape(fieldName)}"]`);
     if (field) {
       field.style.backgroundColor = '#FFF9C4';
       field.style.border = '2px solid #FFC107';
@@ -31,6 +31,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ success: false, error: '字段未找到' });
     }
   }
-  
+
   return true;
 });

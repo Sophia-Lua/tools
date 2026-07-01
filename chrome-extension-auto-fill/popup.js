@@ -1,6 +1,16 @@
 // popup.js
 import StorageUtils from './utils/storage.js';
 
+function escapeHTML(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const apiKeyInput = document.getElementById('api-key');
   const saveKeyBtn = document.getElementById('save-key-btn');
@@ -131,6 +141,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const suggestions = getSuggestionsFromUI();
 
+      if (suggestions.length === 0) {
+        status.textContent = '没有可填充的字段';
+        status.className = 'error';
+        return;
+      }
+
       for (const suggestion of suggestions) {
         await chrome.tabs.sendMessage(tab.id, {
           action: 'fillForm',
@@ -155,6 +171,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const suggestions = getSuggestionsFromUI();
+
+      if (suggestions.length === 0) {
+        status.textContent = '没有可预览的字段';
+        status.className = 'error';
+        return;
+      }
 
       for (const suggestion of suggestions) {
         await chrome.tabs.sendMessage(tab.id, {
@@ -206,13 +228,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           return `
             <div class="field-item">
               <div class="field-info">
-                <span class="field-name">${field.label || field.name}</span>
-                <span class="field-type">(${displayType})</span>
+                <span class="field-name">${escapeHTML(field.label || field.name)}</span>
+                <span class="field-type">(${escapeHTML(displayType)})</span>
               </div>
               <input type="text"
                      class="suggestion-input"
-                     value="${suggestionValue}"
-                     data-field-name="${field.name}"
+                     value="${escapeHTML(suggestionValue)}"
+                     data-field-name="${escapeHTML(field.name)}"
                      placeholder="输入填充内容">
             </div>
           `;
@@ -220,8 +242,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           return `
             <div class="field-item">
               <div class="field-info">
-                <span class="field-name">${field.label || field.name}</span>
-                <span class="field-type">(${displayType})</span>
+                <span class="field-name">${escapeHTML(field.label || field.name)}</span>
+                <span class="field-type">(${escapeHTML(displayType)})</span>
               </div>
             </div>
           `;
