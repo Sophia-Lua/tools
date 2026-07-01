@@ -42,6 +42,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     profileSelect.appendChild(option);
   });
 
+  // 管理配置文件
+  manageProfilesBtn.addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('popup-profiles.html') });
+  });
+
   // 保存API密钥
   saveKeyBtn.addEventListener('click', async () => {
     const key = apiKeyInput.value.trim();
