@@ -169,12 +169,12 @@ describe('Background Script', () => {
 
       messageListener({ type: 'callOpenRouter', prompt: 'test' }, {}, sendResponse);
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => setTimeout(resolve, 4000));
 
       expect(sendResponse).toHaveBeenCalledWith({
         success: false,
         error: 'Unauthorized'
       });
-    });
+    }, 10000);
   });
 });

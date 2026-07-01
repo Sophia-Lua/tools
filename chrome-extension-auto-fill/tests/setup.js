@@ -1,3 +1,7 @@
+global.CSS = {
+  escape: (str) => str.replace(/([^\w-])/g, '\\$1')
+};
+
 global.chrome = {
   storage: {
     local: {
