@@ -7,9 +7,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const profileSelect = document.getElementById('profile-select');
   const manageProfilesBtn = document.getElementById('manage-profiles-btn');
   const detectBtn = document.getElementById('detect-btn');
+  const getSuggestionsBtn = document.getElementById('get-suggestions-btn');
   const fillBtn = document.getElementById('fill-btn');
+  const previewBtn = document.getElementById('preview-btn');
+  const fillActions = document.getElementById('fill-actions');
   const formList = document.getElementById('form-list');
   const status = document.getElementById('status');
+
+  let detectedForms = null;
+  let currentSuggestions = null;
 
   // 加载API密钥
   const apiKey = await StorageUtils.getApiKey();
@@ -40,18 +46,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   detectBtn.addEventListener('click', async () => {
     status.textContent = '正在检测表单...';
     status.className = 'loading';
-    
+
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const response = await chrome.tabs.sendMessage(tab.id, { action: 'detectForms' });
-      
+
       if (response.forms && response.forms.length > 0) {
-        displayForms(response.forms);
-        fillBtn.disabled = false;
+        detectedForms = response.forms;
+        currentSuggestions = null;
+        displayForms(response.forms, null);
+        getSuggestionsBtn.disabled = false;
+        fillActions.style.display = 'none';
         status.textContent = `检测到 ${response.forms.length} 个表单`;
         status.className = 'success';
       } else {
         formList.innerHTML = '<p>未检测到表单</p>';
+        detectedForms = null;
+        currentSuggestions = null;
+        getSuggestionsBtn.disabled = true;
+        fillActions.style.display = 'none';
         status.textContent = '未检测到表单';
         status.className = 'error';
       }
@@ -61,56 +74,71 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 填充表单
-  fillBtn.addEventListener('click', async () => {
-    status.textContent = '正在填充表单...';
+  // 获取AI建议
+  getSuggestionsBtn.addEventListener('click', async () => {
+    status.textContent = '正在获取AI建议...';
     status.className = 'loading';
-    
+
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const selectedProfile = profileSelect.value;
-      
+
       if (!selectedProfile) {
         status.textContent = '请先选择配置文件';
         status.className = 'error';
         return;
       }
-      
+
       const profiles = await StorageUtils.getProfiles();
       const profile = profiles.find(p => p.name === selectedProfile);
-      
+
       if (!profile) {
         status.textContent = '配置文件未找到';
         status.className = 'error';
         return;
       }
-      
-      // 获取表单字段
-      const formsResponse = await chrome.tabs.sendMessage(tab.id, { action: 'detectForms' });
-      const fields = formsResponse.forms[0].fields;
-      
-      // 获取AI填充建议
+
+      const fields = detectedForms[0].fields;
+
       const suggestionsResponse = await chrome.runtime.sendMessage({
         action: 'getFillSuggestions',
         fields: fields,
         userData: profile.data
       });
-      
+
       if (suggestionsResponse.error) {
-        status.textContent = `AI填充失败: ${suggestionsResponse.error}`;
+        status.textContent = `AI建议获取失败: ${suggestionsResponse.error}`;
         status.className = 'error';
         return;
       }
-      
-      // 填充表单
-      for (const suggestion of suggestionsResponse.suggestions) {
+
+      currentSuggestions = suggestionsResponse.suggestions;
+      displayForms(detectedForms, currentSuggestions);
+      fillActions.style.display = 'flex';
+      status.textContent = 'AI建议已获取，请检查并编辑后填充';
+      status.className = 'success';
+    } catch (error) {
+      status.textContent = `获取建议失败: ${error.message}`;
+      status.className = 'error';
+    }
+  });
+
+  // 直接填充
+  fillBtn.addEventListener('click', async () => {
+    status.textContent = '正在填充表单...';
+    status.className = 'loading';
+
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const suggestions = getSuggestionsFromUI();
+
+      for (const suggestion of suggestions) {
         await chrome.tabs.sendMessage(tab.id, {
           action: 'fillForm',
           fieldName: suggestion.fieldName,
-          value: suggestion.suggestion
+          value: suggestion.value
         });
       }
-      
+
       status.textContent = '表单填充完成';
       status.className = 'success';
     } catch (error) {
@@ -119,19 +147,93 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  function displayForms(forms) {
+  // 预览模式
+  previewBtn.addEventListener('click', async () => {
+    status.textContent = '正在预览填充...';
+    status.className = 'loading';
+
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const suggestions = getSuggestionsFromUI();
+
+      for (const suggestion of suggestions) {
+        await chrome.tabs.sendMessage(tab.id, {
+          action: 'previewFill',
+          fieldName: suggestion.fieldName,
+          value: suggestion.value
+        });
+      }
+
+      status.textContent = '预览模式已激活，表单字段已高亮显示';
+      status.className = 'success';
+    } catch (error) {
+      status.textContent = `预览失败: ${error.message}`;
+      status.className = 'error';
+    }
+  });
+
+  function getSuggestionsFromUI() {
+    const suggestions = [];
+    const inputs = formList.querySelectorAll('.suggestion-input');
+    inputs.forEach(input => {
+      suggestions.push({
+        fieldName: input.dataset.fieldName,
+        value: input.value
+      });
+    });
+    return suggestions;
+  }
+
+  function displayForms(forms, suggestions) {
     formList.innerHTML = '';
-    forms.forEach(form => {
+    forms.forEach((form, formIndex) => {
       const formDiv = document.createElement('div');
       formDiv.className = 'form-item';
+
+      const fieldsHTML = form.fields.map((field, fieldIndex) => {
+        const suggestion = suggestions ? suggestions[fieldIndex] : null;
+        const suggestionValue = suggestion ? suggestion.suggestion : '';
+        const displayType = field.type === 'text' ? '文本' :
+                           field.type === 'email' ? '邮箱' :
+                           field.type === 'tel' ? '电话' :
+                           field.type === 'number' ? '数字' :
+                           field.type === 'select' ? '下拉选择' :
+                           field.type === 'checkbox' ? '复选框' :
+                           field.type === 'radio' ? '单选' :
+                           field.type === 'textarea' ? '文本域' : field.type;
+
+        if (suggestions) {
+          return `
+            <div class="field-item">
+              <div class="field-info">
+                <span class="field-name">${field.label || field.name}</span>
+                <span class="field-type">(${displayType})</span>
+              </div>
+              <input type="text"
+                     class="suggestion-input"
+                     value="${suggestionValue}"
+                     data-field-name="${field.name}"
+                     placeholder="输入填充内容">
+            </div>
+          `;
+        } else {
+          return `
+            <div class="field-item">
+              <div class="field-info">
+                <span class="field-name">${field.label || field.name}</span>
+                <span class="field-type">(${displayType})</span>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+
       formDiv.innerHTML = `
-        <h3>表单 ${form.id + 1}</h3>
+        <h3>表单 ${formIndex + 1}</h3>
         <p>字段数: ${form.fields.length}</p>
-        <ul>
-          ${form.fields.map(field => `
-            <li>${field.label || field.name} (${field.type})</li>
-          `).join('')}
-        </ul>
+        <div class="fields-container">
+          ${fieldsHTML}
+        </div>
       `;
       formList.appendChild(formDiv);
     });

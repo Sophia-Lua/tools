@@ -68,6 +68,51 @@ input, select {
   padding-left: 16px;
 }
 
+.fields-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.field-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.field-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+}
+
+.field-type {
+  font-size: 11px;
+  color: #888;
+}
+
+.suggestion-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.suggestion-input:focus {
+  border-color: #2196F3;
+  outline: none;
+}
+
 .actions {
   display: flex;
   gap: 8px;
@@ -91,9 +136,28 @@ button:disabled {
   color: white;
 }
 
+#get-suggestions-btn {
+  background-color: #FF5722;
+  color: white;
+}
+
 #fill-btn {
   background-color: #2196F3;
   color: white;
+}
+
+#preview-btn {
+  background-color: #9C27B0;
+  color: white;
+}
+
+#fill-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.fill-direct, .fill-preview {
+  flex: 1;
 }
 
 #save-key-btn, #manage-profiles-btn {

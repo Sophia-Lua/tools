@@ -18,6 +18,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ success: false, error: '字段未找到' });
     }
   }
+
+  if (request.action === 'previewFill') {
+    const { fieldName, value } = request;
+    const field = document.querySelector(`[name="${fieldName}"]`);
+    if (field) {
+      field.style.backgroundColor = '#FFF9C4';
+      field.style.border = '2px solid #FFC107';
+      field.title = `预览: ${value}`;
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false, error: '字段未找到' });
+    }
+  }
   
   return true;
 });
