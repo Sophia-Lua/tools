@@ -1,6 +1,24 @@
 // popup-profiles.js
 import StorageUtils from './utils/storage.js';
 
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function escapeAttr(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const profileNameInput = document.getElementById('profile-name');
   const profileDataInput = document.getElementById('profile-data');
@@ -45,10 +63,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     profiles.forEach(profile => {
       const profileDiv = document.createElement('div');
       profileDiv.className = 'profile-item';
+      const escapedName = escapeHtml(profile.name);
+      const escapedData = escapeHtml(JSON.stringify(profile.data, null, 2));
+      const safeName = escapeAttr(profile.name);
       profileDiv.innerHTML = `
-        <h3>${profile.name}</h3>
-        <pre>${JSON.stringify(profile.data, null, 2)}</pre>
-        <button class="delete-btn" data-name="${profile.name}">删除</button>
+        <h3>${escapedName}</h3>
+        <pre>${escapedData}</pre>
+        <button class="delete-btn" data-name="${safeName}">删除</button>
       `;
       profileList.appendChild(profileDiv);
     });
