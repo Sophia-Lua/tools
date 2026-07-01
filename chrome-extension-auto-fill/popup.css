@@ -1,3 +1,4 @@
+/* Popup窗口样式 */
 body {
   width: 350px;
   font-family: Arial, sans-serif;
@@ -17,11 +18,59 @@ h1 {
   color: #333;
 }
 
+.settings, .profiles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+label {
+  font-size: 12px;
+  color: #666;
+}
+
+input, select {
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
 #form-list {
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 12px;
   min-height: 100px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.form-item {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.form-item h3 {
+  font-size: 14px;
+  margin: 0 0 4px 0;
+}
+
+.form-item p {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 4px 0;
+}
+
+.form-item ul {
+  font-size: 12px;
+  margin: 0;
+  padding-left: 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
 }
 
 button {
@@ -45,4 +94,32 @@ button:disabled {
 #fill-btn {
   background-color: #2196F3;
   color: white;
+}
+
+#save-key-btn, #manage-profiles-btn {
+  background-color: #FF9800;
+  color: white;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+#status {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+#status.success {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+}
+
+#status.error {
+  background-color: #FFEBEE;
+  color: #C62828;
+}
+
+#status.loading {
+  background-color: #E3F2FD;
+  color: #1565C0;
 }

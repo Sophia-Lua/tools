@@ -8,12 +8,33 @@
 <body>
   <div class="container">
     <h1>AI Form Auto-Fill</h1>
+    
+    <div class="settings">
+      <label for="api-key">API密钥:</label>
+      <input type="password" id="api-key" placeholder="输入OpenRouter API密钥">
+      <button id="save-key-btn">保存</button>
+    </div>
+    
+    <div class="profiles">
+      <label for="profile-select">配置文件:</label>
+      <select id="profile-select">
+        <option value="">选择配置文件</option>
+      </select>
+      <button id="manage-profiles-btn">管理</button>
+    </div>
+    
     <div id="form-list">
       <p>点击"检测表单"按钮开始</p>
     </div>
-    <button id="detect-btn">检测表单</button>
-    <button id="fill-btn" disabled>填充表单</button>
+    
+    <div class="actions">
+      <button id="detect-btn">检测表单</button>
+      <button id="fill-btn" disabled>填充表单</button>
+    </div>
+    
+    <div id="status"></div>
   </div>
-  <script src="popup.js"></script>
+  
+  <script type="module" src="popup.js"></script>
 </body>
 </html>
