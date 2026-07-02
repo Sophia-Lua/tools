@@ -12,10 +12,11 @@ function escapeHTML(str) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  const providerSelect = document.getElementById('provider-select');
   const apiKeyInput = document.getElementById('api-key');
   const saveKeyBtn = document.getElementById('save-key-btn');
-  const profileSelect = document.getElementById('profile-select');
-  const manageProfilesBtn = document.getElementById('manage-profiles-btn');
+  const modelSelect = document.getElementById('model-select');
+  const modelInput = document.getElementById('model-input');
   const detectBtn = document.getElementById('detect-btn');
   const getSuggestionsBtn = document.getElementById('get-suggestions-btn');
   const fillBtn = document.getElementById('fill-btn');
@@ -24,35 +25,81 @@ document.addEventListener('DOMContentLoaded', async () => {
   const formList = document.getElementById('form-list');
   const status = document.getElementById('status');
 
+  const PROVIDER_MODELS = {
+    zhipu: ['GLM-4.7-Flash', 'GLM-4.5-Flash', 'GLM-4-Air', 'GLM-4'],
+    siliconflow: ['deepseek-ai/DeepSeek-V3', 'Qwen/Qwen2.5-7B-Instruct', 'THUDM/glm-4-9b-chat']
+  };
+
   let detectedForms = null;
   let currentSuggestions = null;
 
-  // 加载API密钥
+  // 切换服务商时更新模型选项
+  providerSelect.addEventListener('change', () => {
+    const provider = providerSelect.value;
+    const models = PROVIDER_MODELS[provider];
+    if (models) {
+      modelSelect.innerHTML = '';
+      models.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m;
+        modelSelect.appendChild(opt);
+      });
+      modelSelect.style.display = '';
+      modelInput.style.display = 'none';
+    } else {
+      modelSelect.style.display = 'none';
+      modelInput.style.display = '';
+    }
+  });
+
+  // 加载已保存的设置
+  const provider = await StorageUtils.getProvider();
+  providerSelect.value = provider;
+  providerSelect.dispatchEvent(new Event('change'));
+
   const apiKey = await StorageUtils.getApiKey();
   if (apiKey) {
     apiKeyInput.value = apiKey;
   }
 
-  // 加载配置文件
-  const profiles = await StorageUtils.getProfiles();
-  profiles.forEach(profile => {
-    const option = document.createElement('option');
-    option.value = profile.name;
-    option.textContent = profile.name;
-    profileSelect.appendChild(option);
-  });
+  const model = await StorageUtils.getModel();
+  if (model) {
+    const presetModels = PROVIDER_MODELS[provider];
+    if (presetModels && presetModels.includes(model)) {
+      modelSelect.value = model;
+    } else if (presetModels) {
+      modelSelect.style.display = 'none';
+      modelInput.style.display = '';
+      modelInput.value = model;
+    } else {
+      modelInput.value = model;
+    }
+  }
 
-  // 管理配置文件
-  manageProfilesBtn.addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('popup-profiles.html') });
-  });
-
-  // 保存API密钥
+  // 保存服务商 + API密钥
   saveKeyBtn.addEventListener('click', async () => {
     const key = apiKeyInput.value.trim();
+    const prov = providerSelect.value;
+    await StorageUtils.saveProvider(prov);
+
+    // 自动保存模型
+    let modelValue;
+    if (prov === 'zhipu' && modelSelect.style.display !== 'none') {
+      modelValue = modelSelect.value;
+    } else {
+      modelValue = modelInput.value.trim();
+    }
+    if (modelValue) {
+      await StorageUtils.saveModel(modelValue);
+    }
+
     if (key) {
       await StorageUtils.saveApiKey(key);
-      status.textContent = 'API密钥已保存';
+      status.textContent = '设置已保存';
+      status.className = 'success';
+    } else {
+      status.textContent = '服务商已切换';
       status.className = 'success';
     }
   });
@@ -63,8 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     status.className = 'loading';
 
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      const response = await chrome.tabs.sendMessage(tab.id, { action: 'detectForms' });
+      const response = await chrome.runtime.sendMessage({ action: 'detectForms' });
 
       if (response.forms && response.forms.length > 0) {
         detectedForms = response.forms;
@@ -95,19 +141,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     status.className = 'loading';
 
     try {
-      const selectedProfile = profileSelect.value;
-
-      if (!selectedProfile) {
-        status.textContent = '请先选择配置文件';
-        status.className = 'error';
-        return;
-      }
-
-      const profiles = await StorageUtils.getProfiles();
-      const profile = profiles.find(p => p.name === selectedProfile);
-
-      if (!profile) {
-        status.textContent = '配置文件未找到';
+      const currentModel = await StorageUtils.getModel();
+      if (!currentModel) {
+        status.textContent = '请先配置模型ID';
         status.className = 'error';
         return;
       }
@@ -116,8 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const suggestionsResponse = await chrome.runtime.sendMessage({
         action: 'getFillSuggestions',
-        fields: fields,
-        userData: profile.data
+        fields: fields
       });
 
       if (suggestionsResponse.error) {
@@ -143,7 +178,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     status.className = 'loading';
 
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const suggestions = getSuggestionsFromUI();
 
       if (suggestions.length === 0) {
@@ -153,7 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       for (const suggestion of suggestions) {
-        await chrome.tabs.sendMessage(tab.id, {
+        await chrome.runtime.sendMessage({
           action: 'fillForm',
           fieldName: suggestion.fieldName,
           value: suggestion.value
@@ -174,7 +208,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     status.className = 'loading';
 
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const suggestions = getSuggestionsFromUI();
 
       if (suggestions.length === 0) {
@@ -184,7 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       for (const suggestion of suggestions) {
-        await chrome.tabs.sendMessage(tab.id, {
+        await chrome.runtime.sendMessage({
           action: 'previewFill',
           fieldName: suggestion.fieldName,
           value: suggestion.value

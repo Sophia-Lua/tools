@@ -10,17 +10,30 @@
     <h1>AI Form Auto-Fill</h1>
     
     <div class="settings">
+      <label for="provider-select">AI服务商:</label>
+      <select id="provider-select">
+        <option value="openrouter">OpenRouter</option>
+        <option value="zhipu">智谱 GLM（免费）</option>
+        <option value="siliconflow">硅基流动（免费）</option>
+        <option value="opencode">OpenCode</option>
+      </select>
+    </div>
+
+    <div class="settings">
       <label for="api-key">API密钥:</label>
-      <input type="password" id="api-key" placeholder="输入OpenRouter API密钥">
+      <input type="password" id="api-key" placeholder="输入API密钥">
       <button id="save-key-btn">保存</button>
     </div>
-    
-    <div class="profiles">
-      <label for="profile-select">配置文件:</label>
-      <select id="profile-select">
-        <option value="">选择配置文件</option>
+
+    <div class="model-setting">
+      <label for="model-input">模型:</label>
+      <select id="model-select">
+        <option value="GLM-4.7-Flash">GLM-4.7-Flash（免费）</option>
+        <option value="GLM-4.5-Flash">GLM-4.5-Flash（免费）</option>
+        <option value="GLM-4-Air">GLM-4-Air</option>
+        <option value="GLM-4">GLM-4</option>
       </select>
-      <button id="manage-profiles-btn">管理</button>
+      <input type="text" id="model-input" placeholder="或手动输入模型ID" style="display:none;">
     </div>
     
     <div id="form-list">

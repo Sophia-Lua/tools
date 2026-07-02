@@ -6,33 +6,48 @@ describe('StorageUtils', () => {
     chrome.storage.local.set.mockClear();
   });
 
-  it('should get profiles from storage', async () => {
-    chrome.storage.local.get.mockResolvedValue({ profiles: [] });
-    const profiles = await StorageUtils.getProfiles();
-    expect(Array.isArray(profiles)).toBe(true);
-    expect(chrome.storage.local.get).toHaveBeenCalledWith('profiles');
+  it('should have PROVIDERS defined', () => {
+    expect(StorageUtils.PROVIDERS).toBeDefined();
+    expect(StorageUtils.PROVIDERS.openrouter).toBeDefined();
+    expect(StorageUtils.PROVIDERS.zhipu).toBeDefined();
+    expect(StorageUtils.PROVIDERS.zhipu.baseUrl).toBe('https://api.z.ai/api/paas/v4/chat/completions');
+    expect(StorageUtils.PROVIDERS.zhipu.defaultModel).toBe('GLM-4.7-Flash');
   });
 
-  it('should save profile to storage', async () => {
-    chrome.storage.local.get.mockResolvedValue({ profiles: [] });
-    const profile = { name: 'Test', data: { name: 'John' } };
-    await StorageUtils.saveProfile(profile);
-    expect(chrome.storage.local.set).toHaveBeenCalledWith({ profiles: [profile] });
+  it('should get provider from storage', async () => {
+    chrome.storage.local.get.mockResolvedValue({ provider: 'zhipu' });
+    const provider = await StorageUtils.getProvider();
+    expect(provider).toBe('zhipu');
+    expect(chrome.storage.local.get).toHaveBeenCalledWith('provider');
   });
 
-  it('should update existing profile with same name', async () => {
-    const existing = [{ name: 'Test', data: { name: 'John' } }];
-    chrome.storage.local.get.mockResolvedValue({ profiles: existing });
-    const updated = { name: 'Test', data: { name: 'Jane' } };
-    await StorageUtils.saveProfile(updated);
-    expect(chrome.storage.local.set).toHaveBeenCalledWith({ profiles: [updated] });
+  it('should return openrouter as default provider', async () => {
+    chrome.storage.local.get.mockResolvedValue({});
+    const provider = await StorageUtils.getProvider();
+    expect(provider).toBe('openrouter');
   });
 
-  it('should delete profile from storage', async () => {
-    const profiles = [{ name: 'Test', data: {} }];
-    chrome.storage.local.get.mockResolvedValue({ profiles });
-    await StorageUtils.deleteProfile('Test');
-    expect(chrome.storage.local.set).toHaveBeenCalledWith({ profiles: [] });
+  it('should save provider to storage', async () => {
+    await StorageUtils.saveProvider('zhipu');
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({ provider: 'zhipu' });
+  });
+
+  it('should get model from storage', async () => {
+    chrome.storage.local.get.mockResolvedValue({ model: 'GLM-4.7-Flash' });
+    const model = await StorageUtils.getModel();
+    expect(model).toBe('GLM-4.7-Flash');
+    expect(chrome.storage.local.get).toHaveBeenCalledWith('model');
+  });
+
+  it('should return empty string when model not in storage', async () => {
+    chrome.storage.local.get.mockResolvedValue({});
+    const model = await StorageUtils.getModel();
+    expect(model).toBe('');
+  });
+
+  it('should save model to storage', async () => {
+    await StorageUtils.saveModel('GLM-4.7-Flash');
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({ model: 'GLM-4.7-Flash' });
   });
 
   it('should get apiKey from storage', async () => {

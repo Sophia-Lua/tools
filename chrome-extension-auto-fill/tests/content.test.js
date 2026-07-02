@@ -6,21 +6,13 @@ global.chrome = {
   }
 };
 
-jest.mock('../utils/form-detector.js', () => ({
-  __esModule: true,
-  default: {
-    detectForms: jest.fn().mockReturnValue([
-      { id: 0, action: '/submit', method: 'POST', fields: [{ name: 'username', type: 'text' }] }
-    ])
-  }
-}));
-
 describe('Content Script', () => {
   let messageListener;
 
   beforeEach(() => {
     jest.clearAllMocks();
     document.body.innerHTML = '';
+    window.__aiFormAutoFillInjected = false;
     jest.isolateModules(() => {
       require('../content.js');
     });
@@ -37,13 +29,24 @@ describe('Content Script', () => {
   });
 
   it('should handle detectForms action', async () => {
+    document.body.innerHTML = `
+      <form action="/submit" method="POST">
+        <input name="username" type="text">
+      </form>
+    `;
     const sendResponse = jest.fn();
     messageListener({ action: 'detectForms' }, {}, sendResponse);
     await new Promise(resolve => setTimeout(resolve, 100));
     expect(sendResponse).toHaveBeenCalledWith({
-      forms: [
-        { id: 0, action: '/submit', method: 'POST', fields: [{ name: 'username', type: 'text' }] }
-      ]
+      forms: expect.arrayContaining([
+        expect.objectContaining({
+          action: '/submit',
+          method: 'POST',
+          fields: expect.arrayContaining([
+            expect.objectContaining({ name: 'username', type: 'text' })
+          ])
+        })
+      ])
     });
   });
 

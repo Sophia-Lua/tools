@@ -5,30 +5,21 @@ global.chrome = {
     },
     getURL: jest.fn().mockReturnValue('chrome-extension://test/')
   },
-  storage: {
-    local: {
-      get: jest.fn(),
-      set: jest.fn()
-    }
+  tabs: {
+    query: jest.fn(),
+    sendMessage: jest.fn()
+  },
+  scripting: {
+    executeScript: jest.fn()
   }
 };
 
-global.fetch = jest.fn();
-
 const mockGetFillSuggestions = jest.fn();
-const mockGetApiKey = jest.fn();
 
 jest.mock('../utils/ai-filler.js', () => ({
   __esModule: true,
   default: {
     getFillSuggestions: (...args) => mockGetFillSuggestions(...args)
-  }
-}));
-
-jest.mock('../utils/storage.js', () => ({
-  __esModule: true,
-  default: {
-    getApiKey: (...args) => mockGetApiKey(...args)
   }
 }));
 
@@ -49,22 +40,21 @@ describe('Background Script', () => {
 
   it('should return true to keep message channel open for getFillSuggestions', () => {
     mockGetFillSuggestions.mockResolvedValue([]);
-    const result = messageListener({ action: 'getFillSuggestions', fields: [], userData: {} }, {}, jest.fn());
+    const result = messageListener({ action: 'getFillSuggestions', fields: [] }, {}, jest.fn());
     expect(result).toBe(true);
   });
 
-  it('should call AiFiller.getFillSuggestions with fields and userData', async () => {
+  it('should call AiFiller.getFillSuggestions with fields only', async () => {
     const sendResponse = jest.fn();
     const fields = [{ name: 'email', type: 'email' }];
-    const userData = { email: 'test@example.com' };
 
     mockGetFillSuggestions.mockResolvedValue([{ fieldName: 'email', suggestion: 'test@example.com', confidence: 0.9 }]);
 
-    messageListener({ action: 'getFillSuggestions', fields, userData }, {}, sendResponse);
+    messageListener({ action: 'getFillSuggestions', fields }, {}, sendResponse);
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
-    expect(mockGetFillSuggestions).toHaveBeenCalledWith(fields, userData);
+    expect(mockGetFillSuggestions).toHaveBeenCalledWith(fields);
   });
 
   it('should send suggestions back via sendResponse', async () => {
@@ -72,7 +62,7 @@ describe('Background Script', () => {
     const suggestions = [{ fieldName: 'email', suggestion: 'test@example.com', confidence: 0.9 }];
     mockGetFillSuggestions.mockResolvedValue(suggestions);
 
-    messageListener({ action: 'getFillSuggestions', fields: [{ name: 'email', type: 'email' }], userData: { email: 'test@example.com' } }, {}, sendResponse);
+    messageListener({ action: 'getFillSuggestions', fields: [{ name: 'email', type: 'email' }] }, {}, sendResponse);
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -83,98 +73,80 @@ describe('Background Script', () => {
     const sendResponse = jest.fn();
     mockGetFillSuggestions.mockRejectedValue(new Error('API key missing'));
 
-    messageListener({ action: 'getFillSuggestions', fields: [], userData: {} }, {}, sendResponse);
+    messageListener({ action: 'getFillSuggestions', fields: [] }, {}, sendResponse);
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
     expect(sendResponse).toHaveBeenCalledWith({ error: 'API key missing' });
   });
 
-  describe('callOpenRouter handler', () => {
-    it('should return true to keep message channel open', () => {
-      mockGetApiKey.mockResolvedValue('test-key');
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ choices: [{ message: { content: '[]' } }] })
-      });
-      const result = messageListener({ type: 'callOpenRouter', prompt: 'test' }, {}, jest.fn());
+  describe('handleTabMessage (detectForms/fillForm/previewFill)', () => {
+    it('should return true for detectForms to keep channel open', () => {
+      chrome.tabs.query.mockResolvedValue([{ id: 1 }]);
+      chrome.scripting.executeScript.mockResolvedValue([]);
+      chrome.tabs.sendMessage.mockResolvedValue({ forms: [] });
+      const result = messageListener({ action: 'detectForms' }, {}, jest.fn());
       expect(result).toBe(true);
     });
 
-    it('should call API with correct headers and body', async () => {
+    it('should inject content script and forward detectForms', async () => {
       const sendResponse = jest.fn();
-      mockGetApiKey.mockResolvedValue('test-api-key');
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ choices: [{ message: { content: '{"result":"ok"}' } }] })
-      });
+      chrome.tabs.query.mockResolvedValue([{ id: 42 }]);
+      chrome.scripting.executeScript.mockResolvedValue([]);
+      chrome.tabs.sendMessage.mockResolvedValue({ forms: [{ id: 0, fields: [] }] });
 
-      messageListener({ type: 'callOpenRouter', prompt: 'test prompt' }, {}, sendResponse);
+      messageListener({ action: 'detectForms' }, {}, sendResponse);
 
       await new Promise(resolve => setTimeout(resolve, 0));
 
-      expect(mockGetApiKey).toHaveBeenCalled();
-      expect(global.fetch).toHaveBeenCalledWith(
-        'https://openrouter.ai/api/v1/chat/completions',
-        expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({
-            'Authorization': 'Bearer test-api-key'
-          }),
-          body: JSON.stringify({
-            model: 'google/gemini-2.0-flash-001',
-            messages: [{ role: 'user', content: 'test prompt' }]
-          })
-        })
-      );
+      expect(chrome.tabs.query).toHaveBeenCalledWith({ active: true, currentWindow: true });
+      expect(chrome.scripting.executeScript).toHaveBeenCalledWith({
+        target: { tabId: 42 },
+        files: ['content.js']
+      });
+      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(42, { action: 'detectForms' });
+      expect(sendResponse).toHaveBeenCalledWith({ forms: [{ id: 0, fields: [] }] });
     });
 
-    it('should return success with data on successful API call', async () => {
+    it('should forward fillForm through background', async () => {
       const sendResponse = jest.fn();
-      mockGetApiKey.mockResolvedValue('test-api-key');
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ choices: [{ message: { content: 'test response' } }] })
-      });
+      chrome.tabs.query.mockResolvedValue([{ id: 10 }]);
+      chrome.scripting.executeScript.mockResolvedValue([]);
+      chrome.tabs.sendMessage.mockResolvedValue({ success: true });
 
-      messageListener({ type: 'callOpenRouter', prompt: 'test' }, {}, sendResponse);
+      messageListener({ action: 'fillForm', fieldName: 'email', value: 'test@example.com' }, {}, sendResponse);
 
       await new Promise(resolve => setTimeout(resolve, 0));
 
-      expect(sendResponse).toHaveBeenCalledWith({ success: true, data: 'test response' });
+      expect(chrome.scripting.executeScript).toHaveBeenCalled();
+      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(10, { action: 'fillForm', fieldName: 'email', value: 'test@example.com' });
+      expect(sendResponse).toHaveBeenCalledWith({ success: true });
     });
 
-    it('should return error when API key is missing', async () => {
+    it('should forward previewFill through background', async () => {
       const sendResponse = jest.fn();
-      mockGetApiKey.mockResolvedValue('');
+      chrome.tabs.query.mockResolvedValue([{ id: 5 }]);
+      chrome.scripting.executeScript.mockResolvedValue([]);
+      chrome.tabs.sendMessage.mockResolvedValue({ success: true });
 
-      messageListener({ type: 'callOpenRouter', prompt: 'test' }, {}, sendResponse);
+      messageListener({ action: 'previewFill', fieldName: 'name', value: '张三' }, {}, sendResponse);
 
       await new Promise(resolve => setTimeout(resolve, 0));
 
-      expect(sendResponse).toHaveBeenCalledWith({
-        success: false,
-        error: 'API密钥未配置，请在设置中添加OpenRouter API密钥'
-      });
+      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(5, { action: 'previewFill', fieldName: 'name', value: '张三' });
+      expect(sendResponse).toHaveBeenCalledWith({ success: true });
     });
 
-    it('should return error on API failure', async () => {
+    it('should handle injection failure gracefully', async () => {
       const sendResponse = jest.fn();
-      mockGetApiKey.mockResolvedValue('test-api-key');
-      global.fetch.mockResolvedValue({
-        ok: false,
-        status: 401,
-        json: () => Promise.resolve({ error: { message: 'Unauthorized' } })
-      });
+      chrome.tabs.query.mockResolvedValue([{ id: 1 }]);
+      chrome.scripting.executeScript.mockRejectedValue(new Error('Cannot access tab'));
 
-      messageListener({ type: 'callOpenRouter', prompt: 'test' }, {}, sendResponse);
+      messageListener({ action: 'detectForms' }, {}, sendResponse);
 
-      await new Promise(resolve => setTimeout(resolve, 4000));
+      await new Promise(resolve => setTimeout(resolve, 0));
 
-      expect(sendResponse).toHaveBeenCalledWith({
-        success: false,
-        error: 'Unauthorized'
-      });
-    }, 10000);
+      expect(sendResponse).toHaveBeenCalledWith({ error: 'Cannot access tab' });
+    });
   });
 });

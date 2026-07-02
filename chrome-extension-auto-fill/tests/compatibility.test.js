@@ -80,18 +80,18 @@ describe('Compatibility: Chrome Version Support', () => {
 
   describe('Chrome Storage API Compatibility', () => {
     it('should support chrome.storage.local.get', async () => {
-      const mockGet = jest.fn().mockResolvedValue({ profiles: [] });
+      const mockGet = jest.fn().mockResolvedValue({ model: 'test-model' });
       global.chrome = { storage: { local: { get: mockGet } } };
-      const result = await chrome.storage.local.get('profiles');
-      expect(result).toEqual({ profiles: [] });
-      expect(mockGet).toHaveBeenCalledWith('profiles');
+      const result = await chrome.storage.local.get('model');
+      expect(result).toEqual({ model: 'test-model' });
+      expect(mockGet).toHaveBeenCalledWith('model');
     });
 
     it('should support chrome.storage.local.set', async () => {
       const mockSet = jest.fn().mockResolvedValue();
       global.chrome = { storage: { local: { set: mockSet } } };
-      await chrome.storage.local.set({ profiles: [] });
-      expect(mockSet).toHaveBeenCalledWith({ profiles: [] });
+      await chrome.storage.local.set({ model: 'test-model' });
+      expect(mockSet).toHaveBeenCalledWith({ model: 'test-model' });
     });
 
     it('should support chrome.storage.local.clear', async () => {
@@ -104,7 +104,7 @@ describe('Compatibility: Chrome Version Support', () => {
     it('should handle storage.get returning undefined keys gracefully', async () => {
       const mockGet = jest.fn().mockResolvedValue({});
       global.chrome = { storage: { local: { get: mockGet } } };
-      const result = await chrome.storage.local.get('profiles');
+      const result = await chrome.storage.local.get('model');
       expect(result.profiles).toBeUndefined();
     });
   });
@@ -133,15 +133,6 @@ describe('Compatibility: Chrome Version Support', () => {
   });
 
   describe('ES Module Support', () => {
-    it('should use import statements in content script', () => {
-      const fs = require('fs');
-      const contentCode = fs.readFileSync(
-        require('path').join(__dirname, '..', 'content.js'),
-        'utf-8'
-      );
-      expect(contentCode).toMatch(/^import /m);
-    });
-
     it('should use import statements in background script', () => {
       const fs = require('fs');
       const bgCode = fs.readFileSync(

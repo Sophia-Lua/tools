@@ -3,9 +3,10 @@
   "name": "AI Form Auto-Fill",
   "version": "1.0.0",
   "description": "使用AI自动填写网页表单",
-  "permissions": ["activeTab", "storage", "scripting", "web_page"],
+  "permissions": ["activeTab", "storage", "scripting"],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
@@ -19,7 +20,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["popup-profiles.html"],
+      "resources": [],
       "matches": ["<all_urls>"]
     }
   ]

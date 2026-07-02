@@ -1,7 +1,6 @@
 import FormDetector from '../utils/form-detector.js';
 import AiFiller from '../utils/ai-filler.js';
 import ApiUtils from '../utils/api.js';
-import StorageUtils from '../utils/storage.js';
 
 jest.mock('../utils/api.js', () => ({
   __esModule: true,
@@ -64,13 +63,6 @@ describe('Integration: Full Flow (Form Detect → API Call → Field Fill)', () 
     expect(fields[2]).toEqual(expect.objectContaining({ name: 'phone', type: 'tel', label: '电话' }));
     expect(fields[3]).toEqual(expect.objectContaining({ name: 'country', type: 'select' }));
 
-    const userData = {
-      name: '张三',
-      email: 'zhangsan@example.com',
-      phone: '13800138000',
-      country: 'CN'
-    };
-
     const aiResponse = JSON.stringify([
       { fieldName: 'name', suggestion: '张三', confidence: 0.95 },
       { fieldName: 'email', suggestion: 'zhangsan@example.com', confidence: 0.9 },
@@ -79,11 +71,12 @@ describe('Integration: Full Flow (Form Detect → API Call → Field Fill)', () 
     ]);
     ApiUtils.callOpenRouter.mockResolvedValue(aiResponse);
 
-    const suggestions = await AiFiller.getFillSuggestions(fields, userData);
+    const suggestions = await AiFiller.getFillSuggestions(fields);
     expect(suggestions.length).toBe(4);
     expect(suggestions[0]).toEqual({ fieldName: 'name', suggestion: '张三', confidence: 0.95 });
     expect(suggestions[1]).toEqual({ fieldName: 'email', suggestion: 'zhangsan@example.com', confidence: 0.9 });
 
+    window.__aiFormAutoFillInjected = false;
     jest.isolateModules(() => {
       require('../content.js');
     });
@@ -127,8 +120,6 @@ describe('Integration: Full Flow (Form Detect → API Call → Field Fill)', () 
     expect(fields[1]).toEqual(expect.objectContaining({ name: 'gender', type: 'radio' }));
     expect(fields[3]).toEqual(expect.objectContaining({ name: 'bio', type: 'textarea' }));
 
-    const userData = { agree: 'true', gender: 'female', bio: '我是一名软件工程师' };
-
     const aiResponse = JSON.stringify([
       { fieldName: 'agree', suggestion: 'true', confidence: 0.9 },
       { fieldName: 'gender', suggestion: 'female', confidence: 0.85 },
@@ -136,8 +127,9 @@ describe('Integration: Full Flow (Form Detect → API Call → Field Fill)', () 
     ]);
     ApiUtils.callOpenRouter.mockResolvedValue(aiResponse);
 
-    const suggestions = await AiFiller.getFillSuggestions(fields, userData);
+    const suggestions = await AiFiller.getFillSuggestions(fields);
 
+    window.__aiFormAutoFillInjected = false;
     jest.isolateModules(() => {
       require('../content.js');
     });
@@ -169,7 +161,6 @@ describe('Integration: Full Flow (Form Detect → API Call → Field Fill)', () 
 
     const forms = FormDetector.detectForms();
     const fields = forms[0].fields;
-    const userData = { name: '张三', email: 'zhangsan@example.com' };
 
     const aiResponse = JSON.stringify([
       { fieldName: 'name', suggestion: '张三', confidence: 0.95 },
@@ -177,13 +168,14 @@ describe('Integration: Full Flow (Form Detect → API Call → Field Fill)', () 
     ]);
     ApiUtils.callOpenRouter.mockResolvedValue(aiResponse);
 
-    const suggestions = await AiFiller.getFillSuggestions(fields, userData);
+    const suggestions = await AiFiller.getFillSuggestions(fields);
     expect(suggestions.length).toBe(3);
 
     const companySuggestion = suggestions.find(s => s.fieldName === 'company');
     expect(companySuggestion.suggestion).toBe('');
     expect(companySuggestion.confidence).toBe(0);
 
+    window.__aiFormAutoFillInjected = false;
     jest.isolateModules(() => {
       require('../content.js');
     });
@@ -217,15 +209,15 @@ describe('Integration: Full Flow (Form Detect → API Call → Field Fill)', () 
 
     const forms = FormDetector.detectForms();
     const fields = forms[0].fields;
-    const userData = { name: '张三' };
 
     ApiUtils.callOpenRouter.mockResolvedValue('This is not valid JSON');
 
-    const suggestions = await AiFiller.getFillSuggestions(fields, userData);
+    const suggestions = await AiFiller.getFillSuggestions(fields);
     expect(suggestions.length).toBe(1);
     expect(suggestions[0].suggestion).toBe('');
     expect(suggestions[0].confidence).toBe(0);
 
+    window.__aiFormAutoFillInjected = false;
     jest.isolateModules(() => {
       require('../content.js');
     });
@@ -267,6 +259,7 @@ describe('Integration: Full Flow (Form Detect → API Call → Field Fill)', () 
     expect(contactFields[0].name).toBe('email');
     expect(contactFields[1].name).toBe('message');
 
+    window.__aiFormAutoFillInjected = false;
     jest.isolateModules(() => {
       require('../content.js');
     });
@@ -311,6 +304,7 @@ describe('Integration: Full Flow (Form Detect → API Call → Field Fill)', () 
       </form>
     `;
 
+    window.__aiFormAutoFillInjected = false;
     jest.isolateModules(() => {
       require('../content.js');
     });
@@ -352,6 +346,7 @@ describe('Integration: Full Flow (Form Detect → API Call → Field Fill)', () 
       </form>
     `;
 
+    window.__aiFormAutoFillInjected = false;
     jest.isolateModules(() => {
       require('../content.js');
     });
