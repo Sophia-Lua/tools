@@ -24,19 +24,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   const fillActions = document.getElementById('fill-actions');
   const formList = document.getElementById('form-list');
   const status = document.getElementById('status');
+  const customUrlSetting = document.getElementById('custom-url-setting');
+  const customBaseUrlInput = document.getElementById('custom-base-url');
 
   const PROVIDER_MODELS = {
     zhipu: ['GLM-4.7-Flash', 'GLM-4.5-Flash', 'GLM-4-Air', 'GLM-4'],
-    siliconflow: ['deepseek-ai/DeepSeek-V3', 'Qwen/Qwen2.5-7B-Instruct', 'THUDM/glm-4-9b-chat']
+    siliconflow: ['deepseek-ai/DeepSeek-V3', 'Qwen/Qwen2.5-7B-Instruct', 'THUDM/glm-4-9b-chat'],
+    local: ['Qwen/Qwen2-0.5B-Instruct', 'HuggingFaceTB/SmolLM2-135M-Instruct']
   };
 
   let detectedForms = null;
   let currentSuggestions = null;
 
   // 切换服务商时更新模型选项
-  providerSelect.addEventListener('change', () => {
+  providerSelect.addEventListener('change', async () => {
     const provider = providerSelect.value;
     const models = PROVIDER_MODELS[provider];
+
+    // 显示/隐藏自定义 URL 输入框
+    customUrlSetting.style.display = provider === 'local' ? '' : 'none';
+
     if (models) {
       modelSelect.innerHTML = '';
       models.forEach(m => {
@@ -63,6 +70,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     apiKeyInput.value = apiKey;
   }
 
+  // 加载自定义 API 地址
+  const customBaseUrl = await StorageUtils.getCustomBaseUrl();
+  if (customBaseUrl) {
+    customBaseUrlInput.value = customBaseUrl;
+  }
+
   const model = await StorageUtils.getModel();
   if (model) {
     const presetModels = PROVIDER_MODELS[provider];
@@ -87,11 +100,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     let modelValue;
     if (prov === 'zhipu' && modelSelect.style.display !== 'none') {
       modelValue = modelSelect.value;
+    } else if (prov === 'local' && modelInput.style.display !== 'none') {
+      modelValue = modelInput.value.trim();
     } else {
       modelValue = modelInput.value.trim();
     }
     if (modelValue) {
       await StorageUtils.saveModel(modelValue);
+    }
+
+    // 保存自定义 API 地址
+    if (prov === 'local') {
+      const url = customBaseUrlInput.value.trim();
+      if (url) {
+        await StorageUtils.saveCustomBaseUrl(url);
+      }
     }
 
     if (key) {

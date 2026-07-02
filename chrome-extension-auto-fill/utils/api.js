@@ -5,7 +5,10 @@ const API_TIMEOUT = 30000;
 const ApiUtils = {
   async callOpenRouter(prompt) {
     const apiKey = await StorageUtils.getApiKey();
-    if (!apiKey) {
+    const provider = await StorageUtils.getProvider();
+
+    // 本地模型不需要 API 密钥
+    if (!apiKey && provider !== 'local') {
       throw new Error('API密钥未配置，请在设置中添加API密钥');
     }
 
@@ -14,10 +17,26 @@ const ApiUtils = {
       throw new Error('模型未配置，请在设置中选择模型');
     }
 
-    const provider = await StorageUtils.getProvider();
     const providerConfig = StorageUtils.PROVIDERS[provider];
     if (!providerConfig) {
       throw new Error('未知的服务商');
+    }
+
+    // 对于本地模型，使用自定义 URL
+    let baseUrl = providerConfig.baseUrl;
+    if (provider === 'local') {
+      const customUrl = await StorageUtils.getCustomBaseUrl();
+      if (customUrl) {
+        baseUrl = customUrl;
+        // 确保 URL 以 /v1/chat/completions 结尾
+        if (!baseUrl.endsWith('/v1/chat/completions')) {
+          if (baseUrl.endsWith('/')) {
+            baseUrl = baseUrl + 'v1/chat/completions';
+          } else {
+            baseUrl = baseUrl + '/v1/chat/completions';
+          }
+        }
+      }
     }
 
     const controller = new AbortController();
@@ -25,16 +44,20 @@ const ApiUtils = {
 
     try {
       const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Content-Type': 'application/json'
       };
+
+      // 本地模型可以不需要 Authorization 头
+      if (apiKey) {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+      }
 
       const body = {
         model,
         messages: [{ role: 'user', content: prompt }]
       };
 
-      const response = await fetch(providerConfig.baseUrl, {
+      const response = await fetch(baseUrl, {
         method: 'POST',
         headers,
         body: JSON.stringify(body),

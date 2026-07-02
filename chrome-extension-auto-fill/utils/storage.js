@@ -2,7 +2,8 @@ const PROVIDERS = {
   openrouter: { name: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1/chat/completions', defaultModel: '' },
   zhipu: { name: '智谱 GLM', baseUrl: 'https://api.z.ai/api/paas/v4/chat/completions', defaultModel: 'GLM-4.7-Flash' },
   siliconflow: { name: '硅基流动', baseUrl: 'https://api.siliconflow.cn/v1/chat/completions', defaultModel: 'deepseek-ai/DeepSeek-V3' },
-  opencode: { name: 'OpenCode', baseUrl: 'https://opencode.ai/zen/v1/chat/completions', defaultModel: '' }
+  opencode: { name: 'OpenCode', baseUrl: 'https://opencode.ai/zen/v1/chat/completions', defaultModel: '' },
+  local: { name: '本地模型', baseUrl: 'http://localhost:8080/v1/chat/completions', defaultModel: 'Qwen/Qwen2-0.5B-Instruct' }
 };
 
 const StorageUtils = {
@@ -33,6 +34,15 @@ const StorageUtils = {
 
   async saveApiKey(apiKey) {
     await chrome.storage.local.set({ apiKey });
+  },
+
+  async getCustomBaseUrl() {
+    const result = await chrome.storage.local.get('customBaseUrl');
+    return result.customBaseUrl || '';
+  },
+
+  async saveCustomBaseUrl(url) {
+    await chrome.storage.local.set({ customBaseUrl: url });
   },
 
   async deleteAll() {

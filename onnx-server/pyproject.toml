@@ -1,0 +1,18 @@
+[project]
+name = "form-autofill-server"
+version = "0.1.0"
+description = "Form auto-fill API server using Qwen2-0.5B-Instruct"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "transformers>=4.40.0",
+    "torch>=2.0.0",
+]
+
+[[tool.uv.index]]
+url = "https://download.pytorch.org/whl/cpu"
+name = "pytorch-cpu"
+
+[dependency-groups]
+dev = []

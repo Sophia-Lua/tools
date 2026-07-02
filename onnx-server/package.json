@@ -1,0 +1,12 @@
+{
+  "name": "onnx-address-server",
+  "version": "1.0.0",
+  "description": "Address autofill API server using Mozilla/tinybert-address-autofill",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.0.0"
+  }
+}
