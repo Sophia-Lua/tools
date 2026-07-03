@@ -26,6 +26,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const status = document.getElementById('status');
   const customUrlSetting = document.getElementById('custom-url-setting');
   const customBaseUrlInput = document.getElementById('custom-base-url');
+  const apiKeySetting = document.getElementById('api-key-setting');
+  const modelSetting = document.getElementById('model-setting');
 
   const PROVIDER_MODELS = {
     zhipu: ['GLM-4.7-Flash', 'GLM-4.5-Flash', 'GLM-4-Air', 'GLM-4'],
@@ -43,6 +45,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 显示/隐藏自定义 URL 输入框
     customUrlSetting.style.display = provider === 'local' ? '' : 'none';
+
+    // 本地模型隐藏 API 密钥和模型配置
+    apiKeySetting.style.display = provider === 'local' ? 'none' : '';
+    modelSetting.style.display = provider === 'local' ? 'none' : '';
 
     if (models) {
       modelSelect.innerHTML = '';
@@ -164,8 +170,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     status.className = 'loading';
 
     try {
+      const currentProvider = await StorageUtils.getProvider();
       const currentModel = await StorageUtils.getModel();
-      if (!currentModel) {
+      // 本地模型不需要检查模型配置
+      if (!currentModel && currentProvider !== 'local') {
         status.textContent = '请先配置模型ID';
         status.className = 'error';
         return;
