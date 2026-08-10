@@ -13,7 +13,9 @@ const ApiUtils = {
     }
 
     const model = await StorageUtils.getModel();
-    if (!model) {
+    // 本地模型使用默认模型名称（如果未配置）
+    const effectiveModel = model || (provider === 'local' ? 'default' : '');
+    if (!effectiveModel) {
       throw new Error('模型未配置，请在设置中选择模型');
     }
 
@@ -53,7 +55,7 @@ const ApiUtils = {
       }
 
       const body = {
-        model,
+        model: effectiveModel,
         messages: [{ role: 'user', content: prompt }]
       };
 
