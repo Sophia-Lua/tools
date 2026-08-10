@@ -13,6 +13,7 @@ type Status = 'idle' | 'loading' | 'processing' | 'done' | 'error'
 export default function AudioEditor() {
   const [files, setFiles] = useState<File[]>([])
   const [buffer, setBuffer] = useState<AudioBuffer | null>(null)
+  const [editorReady, setEditorReady] = useState(false)
   const [status, setStatus] = useState<Status>('idle')
   const [message, setMessage] = useState('')
   const [outputUrl, setOutputUrl] = useState('')
@@ -54,43 +55,58 @@ export default function AudioEditor() {
     sourceRef.current = src
   }, [])
 
+  const pendingBuffer = useRef<{ buf: AudioBuffer; name: string } | null>(null)
+
   const loadBufferIntoViewer = useCallback(async (buf: AudioBuffer, name: string) => {
-    if (!containerRef.current) return
-    const [WaveSurferMod, RegionsMod] = await Promise.all([
-      import('wavesurfer.js'),
-      import('wavesurfer.js/dist/plugins/regions.js'),
-    ])
-    const WaveSurfer = WaveSurferMod.default
-    const Regions = RegionsMod.default
-    if (wavesurferRef.current) {
-      wavesurferRef.current.destroy()
-      wavesurferRef.current = null
-    }
-    const regions = Regions.create()
-    regionsRef.current = regions
-    const wavBlob = bufferToWavBlob(buf)
-    if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
-    blobUrlRef.current = URL.createObjectURL(wavBlob)
-    const ws = WaveSurfer.create({
-      container: containerRef.current,
-      waveColor: 'rgba(100,116,139,0.6)',
-      progressColor: 'var(--color-primary)',
-      cursorColor: 'var(--color-primary)',
-      height: 128,
-      normalize: true,
-      url: blobUrlRef.current,
-      plugins: [regions],
-    })
-    wavesurferRef.current = ws
-    ws.on('ready', () => {
-      const region = regions.addRegion({ start: 0, end: buf.duration, drag: true, resize: true, color: 'rgba(59,130,246,0.15)' })
-      region.on('update-end', () => setRegion({ start: region.start, end: region.end }))
-      region.on('update', () => setRegion({ start: region.start, end: region.end }))
-      setRegion({ start: 0, end: buf.duration })
-    })
+    pendingBuffer.current = { buf, name }
+    setEditorReady(true)
     setBuffer(buf)
     setOutputName(name.replace(/\.[^.]+$/, ''))
   }, [])
+
+  useEffect(() => {
+    const pending = pendingBuffer.current
+    if (!pending || !containerRef.current) return
+    let cancelled = false
+    ;(async () => {
+      const { buf } = pending
+      const [WaveSurferMod, RegionsMod] = await Promise.all([
+        import('wavesurfer.js'),
+        import('wavesurfer.js/dist/plugins/regions.js'),
+      ])
+      if (cancelled) return
+      const WaveSurfer = WaveSurferMod.default
+      const Regions = RegionsMod.default
+      if (wavesurferRef.current) {
+        wavesurferRef.current.destroy()
+        wavesurferRef.current = null
+      }
+      const regions = Regions.create()
+      regionsRef.current = regions
+      const wavBlob = bufferToWavBlob(buf)
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
+      blobUrlRef.current = URL.createObjectURL(wavBlob)
+      const ws = WaveSurfer.create({
+        container: containerRef.current!,
+        waveColor: 'rgba(100,116,139,0.6)',
+        progressColor: 'var(--color-primary)',
+        cursorColor: 'var(--color-primary)',
+        height: 128,
+        normalize: true,
+        url: blobUrlRef.current,
+        plugins: [regions],
+      })
+      wavesurferRef.current = ws
+      ws.on('ready', () => {
+        const region = regions.addRegion({ start: 0, end: buf.duration, drag: true, resize: true, color: 'rgba(59,130,246,0.15)' })
+        region.on('update-end', () => setRegion({ start: region.start, end: region.end }))
+        region.on('update', () => setRegion({ start: region.start, end: region.end }))
+        setRegion({ start: 0, end: buf.duration })
+      })
+      pendingBuffer.current = null
+    })()
+    return () => { cancelled = true }
+  }, [editorReady, buffer])
 
   const onFiles = useCallback(async (newFiles: File[]) => {
     if (!newFiles.length) return
@@ -117,6 +133,8 @@ export default function AudioEditor() {
     setOutputUrl('')
     setMessage('')
     setStatus('idle')
+    setEditorReady(false)
+    pendingBuffer.current = null
     wavesurferRef.current?.destroy()
     wavesurferRef.current = null
     if (blobUrlRef.current) {
@@ -222,23 +240,26 @@ export default function AudioEditor() {
         </div>
       )}
 
-      {buffer && (
+      {editorReady && (
         <>
-          <div ref={containerRef} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" />
-          {region && (
+          <div ref={containerRef} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] min-h-[128px]" />
+          {!buffer && status === 'processing' && (
+            <div className="text-sm text-[var(--color-text-secondary)]">Loading waveform...</div>
+          )}
+          {buffer && region && (
             <div className="text-xs text-[var(--color-text-secondary)]">
               Selection: {region.start.toFixed(2)}s — {region.end.toFixed(2)}s ({(region.end - region.start).toFixed(2)}s)
             </div>
           )}
 
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => buffer && playBuffer(buffer)} className="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-[var(--color-bg-secondary)]">
+            <button onClick={() => buffer && playBuffer(buffer)} disabled={!buffer} className="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-[var(--color-bg-secondary)] disabled:opacity-40">
               Play
             </button>
-            <button onClick={trimSelection} className="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-[var(--color-bg-secondary)]">
+            <button onClick={trimSelection} disabled={!buffer || !region} className="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-[var(--color-bg-secondary)] disabled:opacity-40">
               Trim to selection
             </button>
-            <button onClick={deleteSelection} className="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-[var(--color-bg-secondary)]">
+            <button onClick={deleteSelection} disabled={!buffer || !region} className="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-[var(--color-bg-secondary)] disabled:opacity-40">
               Delete selection
             </button>
             <button onClick={mergeAll} disabled={files.length < 2} className="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-[var(--color-bg-secondary)] disabled:opacity-40">
@@ -249,45 +270,49 @@ export default function AudioEditor() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:grid-cols-3">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-[var(--color-text-secondary)]">Volume: {volume.toFixed(2)}x</span>
-              <input type="range" min={0} max={2} step={0.05} value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-[var(--color-text-secondary)]">Fade in: {fadeIn.toFixed(1)}s</span>
-              <input type="range" min={0} max={10} step={0.1} value={fadeIn} onChange={(e) => setFadeIn(parseFloat(e.target.value))} />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-[var(--color-text-secondary)]">Fade out: {fadeOut.toFixed(1)}s</span>
-              <input type="range" min={0} max={10} step={0.1} value={fadeOut} onChange={(e) => setFadeOut(parseFloat(e.target.value))} />
-            </label>
-          </div>
-          <button
-            onClick={applyFx}
-            className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary)]/90"
-          >
-            Apply volume & fade
-          </button>
+          {buffer && (
+            <>
+              <div className="grid grid-cols-1 gap-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:grid-cols-3">
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-[var(--color-text-secondary)]">Volume: {volume.toFixed(2)}x</span>
+                  <input type="range" min={0} max={2} step={0.05} value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-[var(--color-text-secondary)]">Fade in: {fadeIn.toFixed(1)}s</span>
+                  <input type="range" min={0} max={10} step={0.1} value={fadeIn} onChange={(e) => setFadeIn(parseFloat(e.target.value))} />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="text-[var(--color-text-secondary)]">Fade out: {fadeOut.toFixed(1)}s</span>
+                  <input type="range" min={0} max={10} step={0.1} value={fadeOut} onChange={(e) => setFadeOut(parseFloat(e.target.value))} />
+                </label>
+              </div>
+              <button
+                onClick={applyFx}
+                className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary)]/90"
+              >
+                Apply volume & fade
+              </button>
 
-          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-            <span className="text-sm text-[var(--color-text-secondary)]">Export as:</span>
-            <select
-              value={format}
-              onChange={(e) => setFormat(e.target.value as 'wav' | 'mp3' | 'flac')}
-              className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm"
-            >
-              <option value="wav">WAV</option>
-              <option value="mp3">MP3</option>
-              <option value="flac">FLAC</option>
-            </select>
-            <button
-              onClick={exportFile}
-              className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary)]/90"
-            >
-              Export
-            </button>
-          </div>
+              <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+                <span className="text-sm text-[var(--color-text-secondary)]">Export as:</span>
+                <select
+                  value={format}
+                  onChange={(e) => setFormat(e.target.value as 'wav' | 'mp3' | 'flac')}
+                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm"
+                >
+                  <option value="wav">WAV</option>
+                  <option value="mp3">MP3</option>
+                  <option value="flac">FLAC</option>
+                </select>
+                <button
+                  onClick={exportFile}
+                  className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary)]/90"
+                >
+                  Export
+                </button>
+              </div>
+            </>
+          )}
         </>
       )}
 
