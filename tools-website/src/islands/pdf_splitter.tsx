@@ -74,7 +74,7 @@ export default function PdfSplitter() {
       const copied = await newDoc.copyPages(srcDoc, pages.map((p) => p - 1));
       copied.forEach((page) => newDoc.addPage(page));
       const pdfBytes = await newDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const blob = new Blob([pdfBytes as unknown as BlobPart], { type: "application/pdf" });
       if (outputUrl) URL.revokeObjectURL(outputUrl);
       setOutputUrl(URL.createObjectURL(blob));
     } catch (e) {

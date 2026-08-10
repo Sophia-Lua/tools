@@ -17,14 +17,16 @@
     "image": "Image Processing",
     "dev": "Developer Tools",
     "file": "File Conversion",
-    "utility": "Utilities"
+    "utility": "Utilities",
+    "audio": "Audio Tools"
   },
   "categoryDesc": {
     "text": "JSON formatting, Base64 encoding, Markdown preview and more text tools",
     "image": "Image compression, format conversion, cropping and more image tools",
     "dev": "Hash generation, JWT decoding, color conversion and more developer tools",
     "file": "PDF processing, document conversion, archive viewing and more file tools",
-    "utility": "Password generation, QR codes, date/time and more utility tools"
+    "utility": "Password generation, QR codes, date/time and more utility tools",
+    "audio": "Convert, edit, denoise and transcribe audio files in your browser"
   },
   "tools": {
     "json-formatter": { "name": "JSON Formatter", "desc": "Format, compress and validate JSON data" },
@@ -100,7 +102,11 @@
     "text-stats": { "name": "Text Statistics", "desc": "Count words, characters and more" },
     "number-converter": { "name": "Number Base Converter", "desc": "Convert numbers between bases" },
     "uuid-generator": { "name": "UUID Generator", "desc": "Generate UUID v4" },
-    "lorem-generator": { "name": "Lorem Ipsum Generator", "desc": "Generate Lorem Ipsum placeholder text" }
+    "lorem-generator": { "name": "Lorem Ipsum Generator", "desc": "Generate Lorem Ipsum placeholder text" },
+    "audio-converter": { "name": "Audio Converter", "desc": "Convert audio between MP3, WAV, OGG, FLAC, AAC, M4A and WEBM" },
+    "audio-editor": { "name": "Audio Editor", "desc": "Trim, cut, merge, fade and adjust volume with a waveform view" },
+    "audio-denoiser": { "name": "Audio Denoiser", "desc": "Remove background noise from speech recordings" },
+    "audio-transcriber": { "name": "Speech to Text", "desc": "Transcribe audio to text locally using Whisper" }
   },
   "common": {
     "input": "Input",

@@ -78,6 +78,10 @@ import DocxConverter from '../../../islands/docx_converter'
 import XlsxConverter from '../../../islands/xlsx_converter'
 import CsvViewer from '../../../islands/csv_viewer'
 import ZipViewer from '../../../islands/zip_viewer'
+import AudioConverter from '../../../islands/audio_converter'
+import AudioEditor from '../../../islands/audio_editor'
+import AudioDenoiser from '../../../islands/audio_denoiser'
+import AudioTranscriber from '../../../islands/audio_transcriber'
 
 export function getStaticPaths() {
   const paths = []
@@ -176,6 +180,10 @@ const slug = tool.slug
       {slug === 'xlsx-converter' && <XlsxConverter client:load />}
       {slug === 'csv-viewer' && <CsvViewer client:load />}
       {slug === 'zip-viewer' && <ZipViewer client:load />}
+      {slug === 'audio-converter' && <AudioConverter client:load />}
+      {slug === 'audio-editor' && <AudioEditor client:load />}
+      {slug === 'audio-denoiser' && <AudioDenoiser client:load />}
+      {slug === 'audio-transcriber' && <AudioTranscriber client:load />}
     </ToolPage>
   </main>
   <Footer />

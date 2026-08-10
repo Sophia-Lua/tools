@@ -17,14 +17,16 @@
     "image": "图片处理",
     "dev": "开发者工具",
     "file": "文件转换",
-    "utility": "综合工具"
+    "utility": "综合工具",
+    "audio": "音频工具"
   },
   "categoryDesc": {
     "text": "JSON格式化、Base64编解码、Markdown预览等文本处理工具",
     "image": "图片压缩、格式转换、裁剪等图片处理工具",
     "dev": "哈希生成、JWT解码、颜色转换等开发者常用工具",
     "file": "PDF处理、文档转换、压缩文件查看等文件转换工具",
-    "utility": "密码生成、二维码生成、日期时间等实用工具"
+    "utility": "密码生成、二维码生成、日期时间等实用工具",
+    "audio": "在浏览器中转换、编辑、降噪和转录音频文件"
   },
   "tools": {
     "json-formatter": { "name": "JSON格式化", "desc": "格式化、压缩和验证JSON数据" },
@@ -100,7 +102,11 @@
     "text-stats": { "name": "文本统计", "desc": "统计文本字数、行数等信息" },
     "number-converter": { "name": "进制转换", "desc": "在不同进制之间转换数字" },
     "uuid-generator": { "name": "UUID生成器", "desc": "生成UUID v4" },
-    "lorem-generator": { "name": "占位文本生成", "desc": "生成Lorem Ipsum占位文本" }
+    "lorem-generator": { "name": "占位文本生成", "desc": "生成Lorem Ipsum占位文本" },
+    "audio-converter": { "name": "音频格式转换", "desc": "在 MP3、WAV、OGG、FLAC、AAC、M4A、WEBM 等格式间互转" },
+    "audio-editor": { "name": "音频编辑器", "desc": "裁剪、剪切、合并、淡入淡出和调节音量，带波形视图" },
+    "audio-denoiser": { "name": "音频降噪", "desc": "去除语音录音中的背景噪音" },
+    "audio-transcriber": { "name": "语音转文字", "desc": "使用 Whisper 在本地将音频转录为文字" }
   },
   "common": {
     "input": "输入",

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 
 const categories = [
   { id: 'text', labelZh: '文本处理', labelEn: 'Text Processing' },
@@ -6,6 +6,7 @@ const categories = [
   { id: 'dev', labelZh: '开发者工具', labelEn: 'Developer Tools' },
   { id: 'file', labelZh: '文件转换', labelEn: 'File Conversion' },
   { id: 'utility', labelZh: '综合工具', labelEn: 'Utilities' },
+  { id: 'audio', labelZh: '音频工具', labelEn: 'Audio Tools' },
 ]
 
 const tools = [
@@ -82,9 +83,13 @@ const tools = [
   { slug: 'number-converter', titleZh: '进制转换', titleEn: 'Number Base Converter', descZh: '在不同进制之间转换数字', descEn: 'Convert numbers between bases', category: 'utility', icon: 'Hash' },
   { slug: 'uuid-generator', titleZh: 'UUID生成器', titleEn: 'UUID Generator', descZh: '生成UUID v4', descEn: 'Generate UUID v4', category: 'utility', icon: 'Fingerprint' },
   { slug: 'lorem-generator', titleZh: '占位文本生成', titleEn: 'Lorem Ipsum Generator', descZh: '生成Lorem Ipsum占位文本', descEn: 'Generate Lorem Ipsum placeholder text', category: 'utility', icon: 'AlignLeft' },
+  { slug: 'audio-converter', titleZh: '音频格式转换', titleEn: 'Audio Converter', descZh: '在 MP3、WAV、OGG、FLAC、AAC、M4A、WEBM 等格式间互转', descEn: 'Convert audio between MP3, WAV, OGG, FLAC, AAC, M4A and WEBM', category: 'audio', icon: 'FileAudio' },
+  { slug: 'audio-editor', titleZh: '音频编辑器', titleEn: 'Audio Editor', descZh: '裁剪、剪切、合并、淡入淡出和调节音量，带波形视图', descEn: 'Trim, cut, merge, fade and adjust volume with a waveform view', category: 'audio', icon: 'AudioWaveform' },
+  { slug: 'audio-denoiser', titleZh: '音频降噪', titleEn: 'Audio Denoiser', descZh: '去除语音录音中的背景噪音', descEn: 'Remove background noise from speech recordings', category: 'audio', icon: 'Headphones' },
+  { slug: 'audio-transcriber', titleZh: '语音转文字', titleEn: 'Speech to Text', descZh: '使用 Whisper 在本地将音频转录为文字', descEn: 'Transcribe audio to text locally using Whisper', category: 'audio', icon: 'Mic' },
 ]
 
-const iconPaths: Record<string, JSX.Element> = {
+const iconPaths: Record<string, ReactNode> = {
   Braces: <><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></>,
   Binary: <><rect x="14" y="14" width="4" height="6" rx="2"/><rect x="6" y="4" width="4" height="6" rx="2"/><path d="M6 20h4"/><path d="M14 10h4"/></>,
   Link: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>,
@@ -136,14 +141,19 @@ const iconPaths: Record<string, JSX.Element> = {
   BarChart3: <><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></>,
   Fingerprint: <><path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4"/><path d="M5 19.5C5.5 18 6 15 6 12c0-.7.12-1.37.34-2"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M9 6.8a6 6 0 0 1 9 5.2c0 .47 0 1.17-.02 2"/></>,
   AlignLeft: <><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></>,
+  FileAudio: <><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M10 13H8"/><circle cx="16" cy="14" r="2"/><path d="M18 14v3"/><path d="M10 17H8"/></>,
+  AudioWaveform: <><path d="M2 13h2l2-7 3 14 3-10 2 6 2-3h6"/></>,
+  Headphones: <><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></>,
+  Mic: <><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></>,
 }
 
-const catIconPaths: Record<string, JSX.Element> = {
+const catIconPaths: Record<string, ReactNode> = {
   text: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></>,
   image: <><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></>,
   dev: <><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></>,
   file: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></>,
   utility: <><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></>,
+  audio: <><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></>,
 }
 
 interface Props {

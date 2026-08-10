@@ -47,17 +47,17 @@ export default function JwtGenerator() {
       const encoder = new TextEncoder()
       const key = await crypto.subtle.importKey(
         'raw',
-        utf8Encode(secret),
+        utf8Encode(secret) as unknown as BufferSource,
         { name: 'HMAC', hash: ALGO_HASH[algorithm] },
         false,
         ['sign']
       )
 
-      const headerB64 = base64UrlEncode(utf8Encode(headerStr).buffer)
-      const payloadB64 = base64UrlEncode(utf8Encode(payloadStr).buffer)
+      const headerB64 = base64UrlEncode(utf8Encode(headerStr).buffer as ArrayBuffer)
+      const payloadB64 = base64UrlEncode(utf8Encode(payloadStr).buffer as ArrayBuffer)
       const signingInput = `${headerB64}.${payloadB64}`
 
-      const signature = await crypto.subtle.sign('HMAC', key, utf8Encode(signingInput))
+      const signature = await crypto.subtle.sign('HMAC', key, utf8Encode(signingInput) as unknown as BufferSource)
       const signatureB64 = base64UrlEncode(signature)
 
       const token = `${signingInput}.${signatureB64}`

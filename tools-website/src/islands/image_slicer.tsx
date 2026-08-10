@@ -35,6 +35,7 @@ export default function ImageSlicer() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const jsonFileRef = useRef<HTMLInputElement>(null)
 
   const drawing = useRef(false)
   const drawingStart = useRef({ x: 0, y: 0 })
@@ -78,6 +79,75 @@ export default function ImageSlicer() {
     const reader = new FileReader()
     reader.onload = () => setImgSrc(reader.result as string)
     reader.readAsDataURL(f)
+  }, [])
+
+  const importJson = useCallback((files: FileList | null) => {
+    if (!files || files.length === 0) return
+    const f = files[0]
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result as string)
+        let parsed: Region[] = []
+
+        if (data && typeof data === "object" && data.frames && typeof data.frames === "object") {
+          // Cocos Creator spriteframe atlas format: { frames: { name: { x, y, w, h } } }
+          const raw: Region[] = []
+          for (const [name, v] of Object.entries<{ x: number; y: number; w: number; h: number }>(data.frames)) {
+            if (typeof v !== "object" || v === null) continue
+            const x = Number(v.x), y = Number(v.y), w = Number(v.w), h = Number(v.h)
+            if (!isFinite(x) || !isFinite(y) || !isFinite(w) || !isFinite(h)) continue
+            raw.push({
+              id: genId(),
+              x: Math.round(x),
+              y: Math.round(y),
+              w: Math.round(w),
+              h: Math.round(h),
+              name,
+              exportW: Math.round(w),
+              exportH: Math.round(h),
+              format: "png" as const,
+            })
+          }
+          parsed = raw
+        } else if (Array.isArray(data?.regions)) {
+          // Tool's own export format: { image: {...}, regions: [...] }
+          const raw: Region[] = []
+          for (const item of data.regions as { name?: string; x?: number; y?: number; w?: number; h?: number; exportW?: number; exportH?: number; format?: string }[]) {
+            const x = Number(item?.x), y = Number(item?.y), w = Number(item?.w), h = Number(item?.h)
+            if (!isFinite(x) || !isFinite(y) || !isFinite(w) || !isFinite(h)) continue
+            const format = item?.format === "jpeg" || item?.format === "webp" || item?.format === "png" ? item.format : "png"
+            raw.push({
+              id: genId(),
+              x: Math.round(x),
+              y: Math.round(y),
+              w: Math.round(w),
+              h: Math.round(h),
+              name: String(item?.name ?? "region"),
+              exportW: Math.round(Number(item?.exportW) || w),
+              exportH: Math.round(Number(item?.exportH) || h),
+              format: format as Region["format"],
+            })
+          }
+          parsed = raw
+        } else {
+          throw new Error("Unrecognized JSON structure. Expected { frames: {...} } or { regions: [...] }.")
+        }
+
+        if (parsed.length === 0) {
+          setError("No valid regions found in JSON.")
+          return
+        }
+
+        setError("")
+        setRegions(parsed)
+        setSelectedId(null)
+      } catch (e) {
+        setError(`Invalid JSON: ${(e as Error).message}`)
+      }
+      if (jsonFileRef.current) jsonFileRef.current.value = ""
+    }
+    reader.readAsText(f)
   }, [])
 
   useEffect(() => {
@@ -482,6 +552,13 @@ export default function ImageSlicer() {
   return (
     <div className="space-y-4">
       <img ref={imgRef} src={imgSrc} className="hidden" alt="" />
+      <input
+        ref={jsonFileRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={(e) => importJson(e.target.files)}
+      />
 
       <div
         onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files) }}
@@ -556,6 +633,15 @@ export default function ImageSlicer() {
               >
                 Export ZIP
               </button>
+              <button
+                onClick={() => jsonFileRef.current?.click()}
+                className="flex-1 px-3 py-2 rounded-lg text-sm font-medium text-white"
+                style={{ backgroundColor: "#10b981" }}
+              >
+                Import JSON
+              </button>
+            </div>
+            <div className="flex gap-2">
               <button
                 onClick={exportJson}
                 disabled={regions.length === 0}

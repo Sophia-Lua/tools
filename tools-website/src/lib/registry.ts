@@ -1,4 +1,4 @@
-export type Category = 'text' | 'image' | 'dev' | 'file' | 'utility'
+export type Category = 'text' | 'image' | 'dev' | 'file' | 'utility' | 'audio'
 
 export interface ToolDef {
   slug: string
@@ -15,6 +15,7 @@ export const categories: { id: Category; icon: string }[] = [
   { id: 'dev', icon: 'Code2' },
   { id: 'file', icon: 'FileUp' },
   { id: 'utility', icon: 'Wrench' },
+  { id: 'audio', icon: 'Headphones' },
 ]
 
 export const tools: ToolDef[] = [
@@ -91,6 +92,10 @@ export const tools: ToolDef[] = [
   { slug: 'number-converter', titleKey: 'tools.number-converter.name', descKey: 'tools.number-converter.desc', category: 'utility', icon: 'Hash', keywords: ['number', 'base', 'convert'] },
   { slug: 'uuid-generator', titleKey: 'tools.uuid-generator.name', descKey: 'tools.uuid-generator.desc', category: 'utility', icon: 'Fingerprint', keywords: ['uuid', 'guid', 'generate'] },
   { slug: 'lorem-generator', titleKey: 'tools.lorem-generator.name', descKey: 'tools.lorem-generator.desc', category: 'utility', icon: 'AlignLeft', keywords: ['lorem', 'ipsum', 'placeholder'] },
+  { slug: 'audio-converter', titleKey: 'tools.audio-converter.name', descKey: 'tools.audio-converter.desc', category: 'audio', icon: 'FileAudio', keywords: ['audio', 'convert', 'mp3', 'wav', 'flac', 'ogg'] },
+  { slug: 'audio-editor', titleKey: 'tools.audio-editor.name', descKey: 'tools.audio-editor.desc', category: 'audio', icon: 'AudioWaveform', keywords: ['audio', 'editor', 'trim', 'merge', 'fade', 'waveform'] },
+  { slug: 'audio-denoiser', titleKey: 'tools.audio-denoiser.name', descKey: 'tools.audio-denoiser.desc', category: 'audio', icon: 'Headphones', keywords: ['audio', 'denoise', 'noise', 'speech'] },
+  { slug: 'audio-transcriber', titleKey: 'tools.audio-transcriber.name', descKey: 'tools.audio-transcriber.desc', category: 'audio', icon: 'Mic', keywords: ['audio', 'transcribe', 'whisper', 'speech', 'stt'] },
 ]
 
 export function getToolsByCategory(category: Category): ToolDef[] {
