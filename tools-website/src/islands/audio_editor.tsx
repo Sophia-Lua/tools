@@ -27,33 +27,90 @@ export default function AudioEditor() {
   const wavesurferRef = useRef<import('wavesurfer.js').default | null>(null)
   const regionsRef = useRef<import('wavesurfer.js/dist/plugins/regions.js').default | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const audioCtxRef = useRef<AudioContext | null>(null)
   const sourceRef = useRef<AudioBufferSourceNode | null>(null)
   const blobUrlRef = useRef<string>('')
+  const [isPlaying, setIsPlaying] = useState(false)
+  const offsetRef = useRef(0)
+  const playStartRef = useRef<{ time: number; offset: number } | null>(null)
+  const stopTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => {
     return () => {
       wavesurferRef.current?.destroy()
-      audioCtxRef.current?.close()
+      if (sourceRef.current) { try { sourceRef.current.stop() } catch { /* ignore */ } }
+      if (stopTimeoutRef.current !== null) clearTimeout(stopTimeoutRef.current)
       if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
     }
   }, [])
 
-  const playBuffer = useCallback((buf: AudioBuffer) => {
-    if (sourceRef.current) {
-      try { sourceRef.current.stop() } catch { /* ignore */ }
-    }
-    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-      audioCtxRef.current = new AudioContext()
-    }
-    const ctx = audioCtxRef.current
+  const playBuffer = useCallback((buf: AudioBuffer, startOffset = 0, maxDuration?: number) => {
+    if (sourceRef.current) { try { sourceRef.current.stop() } catch { /* ignore */ } }
+    if (stopTimeoutRef.current !== null) { clearTimeout(stopTimeoutRef.current); stopTimeoutRef.current = null }
+    const ctx = new AudioContext()
     if (ctx.state === 'suspended') ctx.resume()
     const src = ctx.createBufferSource()
     src.buffer = buf
     src.connect(ctx.destination)
-    src.start(0)
+    src.onended = () => {
+      if (sourceRef.current === src) {
+        sourceRef.current = null
+        offsetRef.current = 0
+        playStartRef.current = null
+        setIsPlaying(false)
+      }
+    }
+    const duration = maxDuration ?? buf.duration - startOffset
+    src.start(0, startOffset, duration)
     sourceRef.current = src
+    playStartRef.current = { time: performance.now(), offset: startOffset }
+    setIsPlaying(true)
+    stopTimeoutRef.current = window.setTimeout(() => {
+      if (sourceRef.current === src) {
+        try { src.stop() } catch { /* ignore */ }
+        sourceRef.current = null
+        offsetRef.current = 0
+        playStartRef.current = null
+        setIsPlaying(false)
+      }
+    }, duration * 1000 + 100)
   }, [])
+
+  const stopPlayback = useCallback(() => {
+    if (sourceRef.current) {
+      const src = sourceRef.current
+      src.onended = null
+      try { src.stop() } catch { /* ignore */ }
+      sourceRef.current = null
+    }
+    if (stopTimeoutRef.current !== null) { clearTimeout(stopTimeoutRef.current); stopTimeoutRef.current = null }
+    offsetRef.current = 0
+    playStartRef.current = null
+    setIsPlaying(false)
+  }, [])
+
+  const togglePlay = useCallback(() => {
+    if (!buffer) return
+    if (isPlaying) {
+      const ps = playStartRef.current
+      if (ps) {
+        offsetRef.current = ps.offset + (performance.now() - ps.time) / 1000
+        playStartRef.current = null
+      }
+      if (sourceRef.current) {
+        const src = sourceRef.current
+        src.onended = null
+        try { src.stop() } catch { /* ignore */ }
+        sourceRef.current = null
+      }
+      if (stopTimeoutRef.current !== null) { clearTimeout(stopTimeoutRef.current); stopTimeoutRef.current = null }
+      setIsPlaying(false)
+    } else {
+      const rStart = region?.start ?? 0
+      const rEnd = region?.end ?? buffer.duration
+      const offset = offsetRef.current >= rStart && offsetRef.current < rEnd ? offsetRef.current : rStart
+      playBuffer(buffer, offset, rEnd - offset)
+    }
+  }, [buffer, isPlaying, region, playBuffer])
 
   const pendingBuffer = useRef<{ buf: AudioBuffer; name: string } | null>(null)
 
@@ -97,6 +154,17 @@ export default function AudioEditor() {
         plugins: [regions],
       })
       wavesurferRef.current = ws
+      ;(ws as any).on('seek', (progress: number) => {
+        const buf = pending.buf
+        offsetRef.current = progress * buf.duration
+        if (sourceRef.current) {
+          const src = sourceRef.current
+          src.onended = null
+          try { src.stop() } catch { /* ignore */ }
+          sourceRef.current = null
+          setIsPlaying(false)
+        }
+      })
       ws.on('ready', () => {
         const region = regions.addRegion({ start: 0, end: buf.duration, drag: true, resize: true, color: 'rgba(59,130,246,0.15)' })
         region.on('update-end', () => setRegion({ start: region.start, end: region.end }))
@@ -134,7 +202,12 @@ export default function AudioEditor() {
     setMessage('')
     setStatus('idle')
     setEditorReady(false)
+    setIsPlaying(false)
     pendingBuffer.current = null
+    offsetRef.current = 0
+    playStartRef.current = null
+    if (stopTimeoutRef.current !== null) { clearTimeout(stopTimeoutRef.current); stopTimeoutRef.current = null }
+    if (sourceRef.current) { try { sourceRef.current.stop() } catch { /* ignore */ } sourceRef.current = null }
     wavesurferRef.current?.destroy()
     wavesurferRef.current = null
     if (blobUrlRef.current) {
@@ -253,8 +326,15 @@ export default function AudioEditor() {
           )}
 
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => buffer && playBuffer(buffer)} disabled={!buffer} className="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-[var(--color-bg-secondary)] disabled:opacity-40">
-              Play
+            <button onClick={togglePlay} disabled={!buffer} className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-[var(--color-bg-secondary)] disabled:opacity-40">
+              {isPlaying ? (
+                <><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pause</>
+              ) : (
+                <><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg> Play</>
+              )}
+            </button>
+            <button onClick={stopPlayback} disabled={!buffer} className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-[var(--color-bg-secondary)] disabled:opacity-40">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg> Stop
             </button>
             <button onClick={trimSelection} disabled={!buffer || !region} className="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-[var(--color-bg-secondary)] disabled:opacity-40">
               Trim to selection
