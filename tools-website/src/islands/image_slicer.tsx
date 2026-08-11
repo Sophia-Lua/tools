@@ -151,17 +151,24 @@ export default function ImageSlicer() {
   }, [])
 
   useEffect(() => {
-    if (!imgSrc || !canvasRef.current || !imgRef.current) return
+    if (!imgSrc || !canvasRef.current) return
     const canvas = canvasRef.current
     const ctx = canvas.getContext("2d")
-    const img = imgRef.current
     if (!ctx) return
-    img.onload = () => {
-      canvas.width = img.naturalWidth
-      canvas.height = img.naturalHeight
-      ctx.drawImage(img, 0, 0)
-      setImgSize({ w: img.naturalWidth, h: img.naturalHeight })
+    let cancelled = false
+    const tmp = new Image()
+    tmp.onload = () => {
+      if (cancelled) return
+      canvas.width = tmp.naturalWidth
+      canvas.height = tmp.naturalHeight
+      ctx.drawImage(tmp, 0, 0)
+      setImgSize({ w: tmp.naturalWidth, h: tmp.naturalHeight })
+      if (imgRef.current) {
+        imgRef.current.src = tmp.src
+      }
     }
+    tmp.src = imgSrc
+    return () => { cancelled = true }
   }, [imgSrc])
 
   const redraw = useCallback(() => {
